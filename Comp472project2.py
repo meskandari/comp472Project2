@@ -14,4 +14,11 @@ from collections import OrderedDict
 from enum import Enum
 import time
 
-
+# An enum class for flagging the language in use
+class Language(Enum):
+    EU = 0 #BASQUE
+    CA = 1 #CATALAN
+    GL = 2 #GALICIAN
+    ES = 3 #SPANISH
+    EN = 4 #ENGLISH
+    PT = 5 #PORTUGUESE
