@@ -105,29 +105,30 @@ class Model:
 
     def getTrainingFile(self,trainingFile=""):
 
-        filename = trainingFile
+        dataSet = list()
+        fileName = trainingFile
         count = 0
 
         try:
             # read the data into a list
-            with open(str(fileName)) as file:
+            with open(str(fileName), encoding="utf8") as file:
                 dataSet = file.readlines()
 
         except FileNotFoundError :
             print("File does not exist")
-            filename=""
+            fileName=""
 
-        if(filename==""):
+        if(fileName==""):
 
             interrupt = False
 
             while(not interrupt):
 
-                filename = input ("Enter a valid TRAINIGN file name with the extension : ")
+                fileName = input ("Enter a valid TRAINIGN file name with the extension : ")
                 
                 try:
                     # read the data into a list
-                    with open(str(fileName)) as file:
+                    with open(str(fileName), encoding="utf8") as file:
                         dataSet = file.readlines()
 
                 except FileNotFoundError :
@@ -140,10 +141,10 @@ class Model:
                 if(count>3):
                     print("You failed to provide a valid TRAINING file, program will use default training dataset")
                     
-                    filename = "training-tweets.txt"
+                    fileName = "training-tweets.txt"
 
                     # read the data into a list
-                    with open(str(fileName)) as file:
+                    with open(str(fileName), encoding="utf8") as file:
                         dataSet = file.readlines()
 
                     interrupt = True
@@ -153,29 +154,30 @@ class Model:
 
     def getTestFile(self,testFile=""):
 
-        filename = testFile
+        dataSet = list()
+        fileName = testFile
         count = 0
 
         try:
             # read the data into a list
-            with open(str(fileName)) as file:
+            with open(str(fileName), encoding="utf8") as file:
                 dataSet = file.readlines()
 
         except FileNotFoundError :
             print("File does not exist")
-            filename=""
+            fileName=""
 
-        if(filename==""):
+        if(fileName==""):
 
             interrupt = False
 
             while(not interrupt):
 
-                filename = input ("Enter a valid TEST file name with the extension : ")
+                fileName = input ("Enter a valid TEST file name with the extension : ")
                 
                 try:
                     # read the data into a list
-                    with open(str(fileName)) as file:
+                    with open(str(fileName), encoding="utf8") as file:
                         dataSet = file.readlines()
 
                 except FileNotFoundError :
@@ -188,13 +190,34 @@ class Model:
                 if(count>3):
                     print("You failed to provide a valid TEST file, program will use default training dataset")
                     
-                    filename = "test-tweets-given.txt"
+                    fileName = "test-tweets-given.txt"
 
                         # read the data into a list
-                    with open(str(fileName)) as file:
+                    with open(str(fileName), encoding="utf8") as file:
                         dataSet = file.readlines()
 
                     interrupt = True
 
         return dataSet
+
+#MAIN
+
+#fileName = "utf8-test.txt"
+fileName = "utf8.txt"
+dataSet = list()
+
+# read the data into a list
+with open(str(fileName), encoding="utf8") as file:
+    #dataSet = file.readlines()
+  while True:
+    char = file.read(1)
+    if not char:
+      print("End of file")
+      break
+    if(char.isalpha and char!=" "):
+        dataSet.append(char)
+
+print(dataSet)
+
+
 
