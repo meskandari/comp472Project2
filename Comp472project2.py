@@ -10,7 +10,6 @@
 import sys
 import numpy as np
 from operator import itemgetter, attrgetter
-from collections import OrderedDict
 from enum import Enum
 import time
 
@@ -27,14 +26,14 @@ class Model:
     
     # default constructor
     def __init__(self):
-      self.vocabular = getVocabulary()
-      self.ngram = getNgram()
-      self.smoothing = getSmoothing()
-      self.trainingFile = getTrainingFile()
-      self.testingFile = getTestFile()
+        self.vocabular = getVocabulary()
+        self.ngram = getNgram()
+        self.smoothing = getSmoothing()
+        self.trainingFile = getTrainingFile()
+        self.testingFile = getTestFile()
 
     #parameterized constructor
-    def __init__(self,vocabulary,ngram,smoothing=0,trainingFile,testingFile):
+    def __init__(self,vocabulary,ngram,smoothing=0,trainingFile="",testingFile=""):
         self.vocabulary = getVocabulary(vocabulary)
         self.ngram = getNgram(ngram)
         self.smoothing = getSmoothing(smoothing)
@@ -79,125 +78,123 @@ class Model:
         
         return switcher.get(choice,"Invalid selection")
 
-        def getSmoothing(self,smoothing=0):
+    def getSmoothing(self,smoothing=0):
 
-            choice = smoothing
+        choice = smoothing
 
-            if(choice==0):
+        if(choice==0):
 
-                interrupt = False
-                count = 0
+            interrupt = False
+            count = 0
                 
-                while(!interrupt):
+            while(not interrupt):
                     
-                    count = count + 1
+                count = count + 1
                     
-                    choice = input ("Enter a smoothing value between 0 and 1 : ")
+                choice = input ("Enter a smoothing value between 0 and 1 : ")
                     
-                    if(choice>=0 or choice<=1):
-                        interrupt = True
+                if(choice>=0 or choice<=1):
+                    interrupt = True
                     
-                    if(count>3):
+                if(count>3):
                     print("You failed to provide a smoothing value between 0 and 1, program will continue with default value: 0 ")
                     choice==0
                     interrupt = True
         
-            return choice
+        return choice
 
-        def getTrainingFile(self,trainingFile=""):
+    def getTrainingFile(self,trainingFile=""):
 
-            filename = trainingFile
-            count = 0
+        filename = trainingFile
+        count = 0
 
-            try:
+        try:
             # read the data into a list
-                with open(str(fileName)) as file:
-                    dataSet = file.readlines()
+            with open(str(fileName)) as file:
+                dataSet = file.readlines()
 
-            except FileNotFoundError :
-                print("File does not exist")
-                filename=""
+        except FileNotFoundError :
+            print("File does not exist")
+            filename=""
 
-            if(filename==""):
+        if(filename==""):
 
-                interrupt = False
+            interrupt = False
 
-                while(!interrupt):
+            while(not interrupt):
 
-                    filename = input ("Enter a valid TRAINIGN file name with the extension : ")
+                filename = input ("Enter a valid TRAINIGN file name with the extension : ")
                 
-                    try:
-                        # read the data into a list
-                        with open(str(fileName)) as file:
-                            dataSet = file.readlines()
+                try:
+                    # read the data into a list
+                    with open(str(fileName)) as file:
+                        dataSet = file.readlines()
 
-                    except FileNotFoundError :
-                        print("File does not exist")
+                except FileNotFoundError :
+                    print("File does not exist")
 
                 
-                    if(len(dataSet)>0):
-                        interrupt = True
+                if(len(dataSet)>0):
+                    interrupt = True
                     
-                    if(count>3):
+                if(count>3):
                     print("You failed to provide a valid TRAINING file, program will use default training dataset")
                     
                     filename = "training-tweets.txt"
 
-                     # read the data into a list
+                    # read the data into a list
                     with open(str(fileName)) as file:
                         dataSet = file.readlines()
 
                     interrupt = True
 
-            return dataSet
+        return dataSet
 
 
-        def getTestFile(self,testFile=""):
+    def getTestFile(self,testFile=""):
 
-            filename = testFile
-            count = 0
+        filename = testFile
+        count = 0
 
-            try:
+        try:
             # read the data into a list
-                with open(str(fileName)) as file:
-                    dataSet = file.readlines()
+            with open(str(fileName)) as file:
+                dataSet = file.readlines()
 
-            except FileNotFoundError :
-                print("File does not exist")
-                filename=""
+        except FileNotFoundError :
+            print("File does not exist")
+            filename=""
 
-            if(filename==""):
+        if(filename==""):
 
-                interrupt = False
+            interrupt = False
 
-                while(!interrupt):
+            while(not interrupt):
 
-                    filename = input ("Enter a valid TEST file name with the extension : ")
+                filename = input ("Enter a valid TEST file name with the extension : ")
                 
-                    try:
-                        # read the data into a list
-                        with open(str(fileName)) as file:
-                            dataSet = file.readlines()
+                try:
+                    # read the data into a list
+                    with open(str(fileName)) as file:
+                        dataSet = file.readlines()
 
-                    except FileNotFoundError :
-                        print("File does not exist")
+                except FileNotFoundError :
+                    print("File does not exist")
 
                 
-                    if(len(dataSet)>0):
-                        interrupt = True
+                if(len(dataSet)>0):
+                    interrupt = True
                     
-                    if(count>3):
+                if(count>3):
                     print("You failed to provide a valid TEST file, program will use default training dataset")
                     
                     filename = "test-tweets-given.txt"
 
-                     # read the data into a list
+                        # read the data into a list
                     with open(str(fileName)) as file:
                         dataSet = file.readlines()
 
                     interrupt = True
 
-            return dataSet
+        return dataSet
 
-    
-    
