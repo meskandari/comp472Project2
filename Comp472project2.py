@@ -22,23 +22,23 @@ class Language(Enum):
     EN = 4 #ENGLISH
     PT = 5 #PORTUGUESE
 
-class Model:
+class LangModel:
     
     # default constructor
     def __init__(self):
-        self.vocabular = getVocabulary()
-        self.ngram = getNgram()
-        self.smoothing = getSmoothing()
-        self.trainingFile = getTrainingFile()
-        self.testingFile = getTestFile()
+        self.vocabulary = self.getVocabulary()
+        self.ngram = self.getNgram()
+        self.smoothing = self.getSmoothing()
+        self.trainingFile = self.getTrainingFile()
+        self.testingFile = self.getTestFile()
 
     #parameterized constructor
-    def __init__(self,vocabulary,ngram,smoothing=0,trainingFile="",testingFile=""):
-        self.vocabulary = getVocabulary(vocabulary)
-        self.ngram = getNgram(ngram)
-        self.smoothing = getSmoothing(smoothing)
-        self.trainingFile = getTrainingFile(trainingFile)
-        self.testingFile = getTestFile(testingFile)
+    def __init__(self,vocabulary=-1,ngram=-1,smoothing=0,trainingFile="",testingFile=""):
+        self.vocabulary = self.getVocabulary(vocabulary)
+        self.ngram = self.getNgram(ngram)
+        self.smoothing = self.getSmoothing(smoothing)
+        self.trainingFile = self.getTrainingFile(trainingFile)
+        self.testingFile = self.getTestFile(testingFile)
 
     def getVocabulary(self,vocabulary=-1):
 
@@ -49,12 +49,12 @@ class Model:
             print("0 : Fold the corpus to lowercase and use only the 26 letters of the alphabet [a-z]")
             print("1 : Distinguish up and low cases and use only the 26 letters of the alphabet [a-z,A-Z]")
             print("2 : Distinguish up and low cases and use all characters accepted by the built-in isalpha() method")
-            choice = input ("Enter your choice: ")
+            choice = int(input ("Enter your choice: "))
 
         switcher = {
-            0: [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x,y,z],
-            1: [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x,y,z,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z],
-            2: [T,B,D]
+            0: self.generateVocabulary(0),
+            1: self.generateVocabulary(1),
+            2: self.generateVocabulary(2)
             }
         
         return switcher.get(choice,"Invalid selection")
@@ -68,7 +68,7 @@ class Model:
             print("1 : character unigrams")
             print("2 : character bigrams")
             print("3 : character trigrams")
-            choice = input ("Enter your choice: ")
+            choice = int(input ("Enter your choice: "))
 
         switcher = {
             1: 1,
@@ -91,7 +91,7 @@ class Model:
                     
                 count = count + 1
                     
-                choice = input ("Enter a smoothing value between 0 and 1 : ")
+                choice = float(input ("Enter a smoothing value between 0 and 1 : "))
                     
                 if(choice>=0 or choice<=1):
                     interrupt = True
@@ -121,10 +121,10 @@ class Model:
         if(fileName==""):
 
             interrupt = False
-
+            count = 0
             while(not interrupt):
-
-                fileName = input ("Enter a valid TRAINIGN file name with the extension : ")
+                count = count + 1
+                fileName = input ("Enter a valid TRAINING file name with the extension : ")
                 
                 try:
                     # read the data into a list
@@ -170,9 +170,10 @@ class Model:
         if(fileName==""):
 
             interrupt = False
+            count = 0
 
             while(not interrupt):
-
+                count = count + 1
                 fileName = input ("Enter a valid TEST file name with the extension : ")
                 
                 try:
@@ -200,24 +201,39 @@ class Model:
 
         return dataSet
 
+    def generateVocabulary(self, selection):
+
+        select = selection
+
+        if(select==0):
+
+            dataSet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x','y','z']
+        
+        elif (select==1):
+
+            dataSet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
+
+        elif(select==2):
+            
+            fileName = "utf8.txt"
+            dataSet = list()
+
+            # read the data into a list
+            with open(str(fileName), encoding="utf8") as file:
+
+              while True:
+                char = file.read(1)
+                if not char:
+                  break
+                if(char.isalpha and char!=" "):
+                    dataSet.append(char)
+  
+        return dataSet
+
+
 #MAIN
 
-#fileName = "utf8-test.txt"
-fileName = "utf8.txt"
-dataSet = list()
-
-# read the data into a list
-with open(str(fileName), encoding="utf8") as file:
-    #dataSet = file.readlines()
-  while True:
-    char = file.read(1)
-    if not char:
-      print("End of file")
-      break
-    if(char.isalpha and char!=" "):
-        dataSet.append(char)
-
-print(dataSet)
-
+test = LangModel(1,1)
+print(test.vocabulary)
 
 
