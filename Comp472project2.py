@@ -57,7 +57,6 @@ class LangModel:
     #parameterized constructor
     def __init__(self,vocabulary=-1,ngram=-1,smoothing=0,trainingFile="",testingFile=""):
         self.generateIndexByVocabulary()
-        
         self.vocabularyType = vocabulary
         self.vocabulary = self.getVocabulary(vocabulary)
         self.ngram = self.getNgram(ngram)
@@ -395,9 +394,13 @@ class LangModel:
     def generateProbabilityTable(self):
         self.splitTrainingFile()
 
-        # read trainingFile[i][3] character by character
-        for line in self.trainingFile:
-            self.incrementValues(self.stringToLanguageEnum(line[2]), line[3].lower())
+        # read trainingFile[i][3] character by character, convert to lower case if using vocabulary 0
+        if self.vocabularyType == 0:
+            for line in self.trainingFile:
+                self.parseNgrams(self.stringToLanguageEnum(line[2]), line[3].lower())
+        else:
+            for line in self.trainingFile:
+                self.parseNgrams(self.stringToLanguageEnum(line[2]), line[3])
 
     def splitTrainingFile(self):
         for i in range(len(self.trainingFile)):
@@ -427,26 +430,24 @@ class LangModel:
                 return False
         return True
 
-    def incrementValues(self, language, str):
+    def parseNgrams(self, language, str):
         if self.ngram == 1:
             for i in range(len(str) - self.ngram - 1):
                 substr = str[i:(i + self.ngram)]
                 if self.existsInVocab(substr):
-                    self.table[(int(language), substr)] += 1
+                    self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
 
         elif self.ngram == 2:
             for i in range(len(str) - self.ngram - 1):
                 substr = str[i:(i + self.ngram)]
                 if self.existsInVocab(substr):
-                    self.table[(int(language), substr[0])][substr[1]] += 1
+                    self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
 
         elif self.ngram == 3:
-            substringLength = 3
-            for i in range(len(str) - substringLength - 1):
-                substr = str[i:(i + substringLength)]
+            for i in range(len(str) - self.ngram - 1):
+                substr = str[i:(i + self.ngram)]
                 if self.existsInVocab(substr):
-                    if language == Language.EU:
-                        self.table[(int(language), substr[0], substr[1])][substr[2]] += 1
+                    self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
         
 
 #MAIN
