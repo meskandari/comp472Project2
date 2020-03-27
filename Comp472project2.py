@@ -306,7 +306,7 @@ class LangModel:
 
         return ngramMatrix
          
-    def increaseSeenEventGivenToken_MatrixModel(self , token , language):
+    def increaseSeenEventGivenToken_Matrix(self , token , language):
          
         switcherVocabularyType = {
             0: LangModel.indexByVocabulary_1_dict,
