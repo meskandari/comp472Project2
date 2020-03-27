@@ -67,11 +67,11 @@ class LangModel:
         self.PT = self.generateMatrix_m(self.ngram, self.vocabulary , self.smoothing)
 
         # test--------------------------
-        self.increseSeenEventGivenToken_MatrixModel("abc" , 0)
-        self.increseSeenEventGivenToken_MatrixModel("abc" , 0)
-        self.increseSeenEventGivenToken_MatrixModel("abc" , 0)
-        self.increseSeenEventGivenToken_MatrixModel("abc" , 0)
-        self.increseSeenEventGivenToken_MatrixModel("abc" , 0)
+        self.increaseSeenEventGivenToken_MatrixModel("abc" , 0)
+        self.increaseSeenEventGivenToken_MatrixModel("abc" , 0)
+        self.increaseSeenEventGivenToken_MatrixModel("abc" , 0)
+        self.increaseSeenEventGivenToken_MatrixModel("abc" , 0)
+        self.increaseSeenEventGivenToken_MatrixModel("abc" , 0)
         print (self.getProbabilityGivenToken_MatrixModel("abc" , 0))
         print (self.getProbabilityGivenToken_MatrixModel("acc" , 0))
         #---------------------------------
