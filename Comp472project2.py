@@ -457,19 +457,15 @@ class LangModel:
         return True
 
     def incrementValues(self, language, str):
-        substringLength = 0
-
         if self.ngram == 1:
-            substringLength = 1
-            for i in range(len(str) - substringLength - 1):
-                substr = str[i:(i + substringLength)]
+            for i in range(len(str) - self.ngram - 1):
+                substr = str[i:(i + self.ngram)]
                 if self.existsInVocab(substr):
                     self.table[(language, substr)] += 1
 
         elif self.ngram == 2:
-            substringLength = 2
-            for i in range(len(str) - substringLength - 1):
-                substr = str[i:(i + substringLength)]
+            for i in range(len(str) - self.ngram - 1):
+                substr = str[i:(i + self.ngram)]
                 if self.existsInVocab(substr):
                     self.table[(language, substr[0])][substr[1]] += 1
 
