@@ -86,6 +86,10 @@ class LangModel:
         #---------------------------------
 
 
+        self.table = defaultdict()
+        if self.ngram == 2 or self.ngram == 3:
+            self.table = defaultdict(dict)
+
     def getVocabulary(self,vocabulary=-1):
 
         choice = vocabulary
@@ -280,8 +284,6 @@ class LangModel:
             else:
                     print ("has duplicates")
                     dataSet = list(set(dataSet))
-            
-
   
         return dataSet
 
@@ -310,7 +312,6 @@ class LangModel:
         
         elif(ngram==3):
             ngramMatrix = np.full((size,size,size), smoothingVal , dtype=np.single)
-            
 
         return ngramMatrix
          
