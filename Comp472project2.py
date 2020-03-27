@@ -262,7 +262,7 @@ class LangModel:
                 char = file.read(1)
                 if not char:
                   break
-                if(char.isalpha and char!=" "):
+                if(char.isalpha() and char!=" "):
                     dataSet.append(char)
             
             #remove duplicates from the dataSet
@@ -301,7 +301,7 @@ class LangModel:
             ngramMatrix = np.full((size,size), smoothingVal)
         
         elif(ngram==3):
-            ngramMatrix = np.full((size,size,size), smoothingVal )
+            ngramMatrix = np.full((size,size,size), smoothingVal , dtype=np.single)
             
 
         return ngramMatrix
@@ -387,7 +387,7 @@ class LangModel:
 
 #MAIN
 
-test = LangModel(1,3)
+test = LangModel(2,3)
 print(test.vocabulary)
 
 
