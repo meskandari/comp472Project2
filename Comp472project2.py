@@ -76,19 +76,14 @@ class LangModel:
         self.PT = self.generateMatrix_m(self.ngram, self.vocabulary , self.smoothing)
 
         # test--------------------------
-        self.increaseSeenEventGivenToken_MatrixModel("abc" , 0)
-        self.increaseSeenEventGivenToken_MatrixModel("abc" , 0)
-        self.increaseSeenEventGivenToken_MatrixModel("abc" , 0)
-        self.increaseSeenEventGivenToken_MatrixModel("abc" , 0)
-        self.increaseSeenEventGivenToken_MatrixModel("abc" , 0)
-        print (self.getProbabilityGivenToken_MatrixModel("abc" , 0))
-        print (self.getProbabilityGivenToken_MatrixModel("acc" , 0))
+        #self.increaseSeenEventGivenToken_MatrixModel("abc" , 0)
+        #self.increaseSeenEventGivenToken_MatrixModel("abc" , 0)
+        #self.increaseSeenEventGivenToken_MatrixModel("abc" , 0)
+        #self.increaseSeenEventGivenToken_MatrixModel("abc" , 0)
+        #self.increaseSeenEventGivenToken_MatrixModel("abc" , 0)
+        #print (self.getProbabilityGivenToken_MatrixModel("abc" , 0))
+        #print (self.getProbabilityGivenToken_MatrixModel("acc" , 0))
         #---------------------------------
-
-
-        self.table = defaultdict()
-        if self.ngram == 2 or self.ngram == 3:
-            self.table = defaultdict(dict)
 
     def getVocabulary(self,vocabulary=-1):
 
@@ -453,4 +448,6 @@ class LangModel:
 
 #MAIN
 
-test = LangModel(0, 1, 0.5, "training-tweets.txt", "test-tweets-given.txt")
+test = LangModel(1, 2, 0.5, "training-tweets.txt", "test-tweets-given.txt")
+test.generateProbabilityTable()
+print(test.EU)
