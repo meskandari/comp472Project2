@@ -463,15 +463,37 @@ class LangModel:
     def printResults(self,listResults, byomFlag=0):
 
         #----------------Trace File Section-----------------------------
-        traceFileName = 
+        traceFileName = "trace_" + str(len(self.vocabulary)) +"_"+ str(self.ngram) +"_"+ str(self.smoothing) +".txt"
         
         if byomFlag == 1:
             traceFileName = "trace_myModel.txt"
             
+        file = open(traceFileName, 'w')
 
+        for i in range(len(self.testingFile)):
+            result = self.processTweet(self.testingFile[i])
+       
+            traceOutputString = str(result[0]) + "  " + str(result[1]) + "  " + str(result[2]) + "  " + str(result[3]) + "  " + str(result[4]) + "\n"
+            file.write(traceOutputString)
+
+        #Finally
+        file.close()
 
         #----------------Overall Evaluation File Section ---------------
 
+        evalFileName = "eval_" + str(len(self.vocabulary)) +"_"+ str(self.ngram) +"_"+ str(self.smoothing) +".txt"
+        
+        if byomFlag == 1:
+            evalFileName = "eval_myModel.txt"
+
+        file = open(evalFileName, 'w')
+
+        #in loop
+        evalOutputString = str(value.fn) + " " + str(value.gn) + " " + str(value.hn) + " " + str(key) + "\n"
+        file.write(evalOutputString)
+
+        #Finally
+        file.close()
         
 
 #MAIN
