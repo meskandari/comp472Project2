@@ -463,8 +463,29 @@ class LangModel:
     def printResults(self,listResults, byomFlag=0):
 
         #----------------Trace File Section-----------------------------
+        
+        #Metrics for Accuracy
+        countWrong, countCorrect = 0
+
+        #Metrics for Precision
+        eu_P, ca_P, gl_P, es_P, en_P, pt_P = 0.00
+
+        #Metrics for Recall
+        eu_R, ca_R, gl_R, es_R, en_R, pt_R = 0.00
+
+
+        #Metrics for F1-measure
+        eu_F, ca_F, gl_F, es_F, en_F, pt_F = 0.00
+
+        #macro-F1 & weighted-average-F1
+        macroF1, weightedAvgF1 = 0.00
+
+
+
+        #Compose file name
         traceFileName = "trace_" + str(len(self.vocabulary)) +"_"+ str(self.ngram) +"_"+ str(self.smoothing) +".txt"
         
+        #Hard code file name for Build Your Own Model
         if byomFlag == 1:
             traceFileName = "trace_myModel.txt"
             
@@ -481,8 +502,10 @@ class LangModel:
 
         #----------------Overall Evaluation File Section ---------------
 
+        #Compose file name
         evalFileName = "eval_" + str(len(self.vocabulary)) +"_"+ str(self.ngram) +"_"+ str(self.smoothing) +".txt"
         
+        #Hard code file name for Build Your Own Model
         if byomFlag == 1:
             evalFileName = "eval_myModel.txt"
 
