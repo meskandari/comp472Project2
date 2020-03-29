@@ -11,7 +11,6 @@ import sys
 import numpy as np
 from operator import itemgetter, attrgetter
 from enum import Enum
-from collections import defaultdict
 import time
 
 # An enum class for flagging the language in use
@@ -300,13 +299,19 @@ class LangModel:
         ngramMatrix = np.zeros
 
         if(ngram==1):
-            ngramMatrix = np.full(size, smoothingVal)
+            ngramMatrix = np.full(size + 1, smoothingVal)
+            ngramMatrix[-1] = size * smoothingVal
            
         elif(ngram==2):
-            ngramMatrix = np.full((size,size), smoothingVal)
+            ngramMatrix = np.full((size,size+1), smoothingVal, dtype=np.half)
+            for row in ngramMatrix:
+                row[-1] = size * smoothingVal
         
         elif(ngram==3):
-            ngramMatrix = np.full((size,size,size), smoothingVal , dtype=np.single)
+            ngramMatrix = np.full((size,size,size+1), smoothingVal , dtype=np.half)
+            for row in ngramMatrix:
+                for depth in row:
+                    depth[-1] = size * smoothingVal
 
         return ngramMatrix
          
@@ -329,12 +334,22 @@ class LangModel:
        
         
         if self.ngram ==1 :
-            switcherLanguage.get(language)[switcherVocabularyType.get(self.vocabularyType)[token]]+=1
+            table = switcherLanguage.get(language)
+            table[switcherVocabularyType.get(self.vocabularyType)[token]]+=1
+            table[-1] += 1
         
         elif self.ngram==2:
-            switcherLanguage.get(language)[switcherVocabularyType.get(self.vocabularyType)[token[0]]][switcherVocabularyType.get(self.vocabularyType)[token[1]]]+=1
+            table = switcherLanguage.get(language)
+            row = table[switcherVocabularyType.get(self.vocabularyType)[token[0]]]
+            row[switcherVocabularyType.get(self.vocabularyType)[token[1]]]+=1
+            row[-1] += 1
+
         else:
-          switcherLanguage.get(language)[switcherVocabularyType.get(self.vocabularyType)[token[0]]][switcherVocabularyType.get(self.vocabularyType)[token[1]]][switcherVocabularyType.get(self.vocabularyType)[token[2]]]+=1  
+            table = switcherLanguage.get(language)
+            row = table[switcherVocabularyType.get(self.vocabularyType)[token[0]]]
+            depth = row[switcherVocabularyType.get(self.vocabularyType)[token[1]]]
+            depth[switcherVocabularyType.get(self.vocabularyType)[token[2]]]+=1
+            depth[-1] += 1
         
     def getProbabilityGivenToken_MatrixModel(self , token , language):
          
@@ -387,6 +402,18 @@ class LangModel:
     
         return ngramDict
        
+    def calculateProbabilities(self):
+        if self.ngram == 1:
+            # for each matrix, divide each cell by the value in last cell
+            for i in range(len(self.EU) - 1):
+                self.EU[i] /= self.EU[-1]
+        elif self.ngram == 2:
+            # for each matrix, divide each cell by the value in last cell of that row
+            print("blah")
+        elif self.ngram == 3:
+            # for each matrix, divide each cell by the value in last cell of that depth row
+            print("blah")
+
     def generateProbabilityTable(self):
         self.splitTrainingFile()
 
@@ -397,6 +424,8 @@ class LangModel:
         else:
             for line in self.trainingFile:
                 self.parseNgrams(self.stringToLanguageEnum(line[2]), line[3])
+
+        self.calculateProbabilities()
 
     def splitTrainingFile(self):
         for i in range(len(self.trainingFile)):
@@ -428,19 +457,19 @@ class LangModel:
 
     def parseNgrams(self, language, str):
         if self.ngram == 1:
-            for i in range(len(str) - self.ngram - 1):
+            for i in range(len(str) - self.ngram):
                 substr = str[i:(i + self.ngram)]
                 if self.existsInVocab(substr):
                     self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
 
         elif self.ngram == 2:
-            for i in range(len(str) - self.ngram - 1):
+            for i in range(len(str) - self.ngram):
                 substr = str[i:(i + self.ngram)]
                 if self.existsInVocab(substr):
                     self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
 
         elif self.ngram == 3:
-            for i in range(len(str) - self.ngram - 1):
+            for i in range(len(str) - self.ngram):
                 substr = str[i:(i + self.ngram)]
                 if self.existsInVocab(substr):
                     self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
@@ -448,6 +477,7 @@ class LangModel:
 
 #MAIN
 
-test = LangModel(1, 2, 0.5, "training-tweets.txt", "test-tweets-given.txt")
+test = LangModel(0, 1)
 test.generateProbabilityTable()
+
 print(test.EU)
