@@ -459,6 +459,19 @@ class LangModel:
                 substr = str[i:(i + self.ngram)]
                 if self.existsInVocab(substr):
                     self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
+
+    def printResults(self,listResults, byomFlag=0):
+
+        #----------------Trace File Section-----------------------------
+        traceFileName = 
+        
+        if byomFlag == 1:
+            traceFileName = "trace_myModel.txt"
+            
+
+
+        #----------------Overall Evaluation File Section ---------------
+
         
 
 #MAIN
