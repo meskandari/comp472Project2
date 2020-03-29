@@ -401,18 +401,6 @@ class LangModel:
         ngramDict = {}
     
         return ngramDict
-       
-    def calculateProbabilities(self):
-        if self.ngram == 1:
-            # for each matrix, divide each cell by the value in last cell
-            for i in range(len(self.EU) - 1):
-                self.EU[i] /= self.EU[-1]
-        elif self.ngram == 2:
-            # for each matrix, divide each cell by the value in last cell of that row
-            print("blah")
-        elif self.ngram == 3:
-            # for each matrix, divide each cell by the value in last cell of that depth row
-            print("blah")
 
     def generateProbabilityTable(self):
         self.splitTrainingFile()
@@ -424,8 +412,6 @@ class LangModel:
         else:
             for line in self.trainingFile:
                 self.parseNgrams(self.stringToLanguageEnum(line[2]), line[3])
-
-        self.calculateProbabilities()
 
     def splitTrainingFile(self):
         for i in range(len(self.trainingFile)):
@@ -477,7 +463,7 @@ class LangModel:
 
 #MAIN
 
-test = LangModel(0, 1)
+test = LangModel(0, 3)
 test.generateProbabilityTable()
 
 print(test.EU)
