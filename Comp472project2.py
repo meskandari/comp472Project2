@@ -467,21 +467,14 @@ class LangModel:
         #Metrics for Accuracy
         countWrong, countCorrect = 0
 
-        #Metrics for Precision
-        eu_P, ca_P, gl_P, es_P, en_P, pt_P = 0.00
-
-        #Metrics for Recall
-        eu_R, ca_R, gl_R, es_R, en_R, pt_R = 0.00
-
-
-        #Metrics for F1-measure
-        eu_F, ca_F, gl_F, es_F, en_F, pt_F = 0.00
-
-        #macro-F1 & weighted-average-F1
-        macroF1, weightedAvgF1 = 0.00
-
-
-
+        #Metrics for True Positive
+        metricsDict = {'eu':{'truePositive':0, 'falsePositive':0,'falseNegative':0},
+                       'ca':{'truePositive':0, 'falsePositive':0,'falseNegative':0},
+                       'gl':{'truePositive':0, 'falsePositive':0,'falseNegative':0},
+                       'es':{'truePositive':0, 'falsePositive':0,'falseNegative':0},
+                       'en':{'truePositive':0, 'falsePositive':0,'falseNegative':0},
+                       'pt':{'truePositive':0, 'falsePositive':0,'falseNegative':0}}
+               
         #Compose file name
         traceFileName = "trace_" + str(len(self.vocabulary)) +"_"+ str(self.ngram) +"_"+ str(self.smoothing) +".txt"
         
@@ -494,13 +487,51 @@ class LangModel:
         for i in range(len(self.testingFile)):
             result = self.processTweet(self.testingFile[i])
        
-            traceOutputString = str(result[0]) + "  " + str(result[1]) + "  " + str(result[2]) + "  " + str(result[3]) + "  " + str(result[4]) + "\n"
+            tweetID = str(result[0])
+            mostLikelyClass = str(result[1])
+            mostLikelyScore = str(result[2])
+            correctClass = str(result[3])
+            outcome = str(result[4]) 
+
+            traceOutputString = tweetID + "  " + mostLikelyClass + "  " + mostLikelyScore + "  " + correctClass + "  " + outcome + "\n"
             file.write(traceOutputString)
+
+            if outcome=="correct":
+                
+                countCorrect = countCorrect + 1
+            
+                metricsDict[correctClass]['truePositive'] = metricsDict[correctClass]['truePositive'] + 1
+
+
+            else:
+                
+                countWrong = countWrong + 1
+
+                metricsDict[mostLikelyClass]['falsePositive'] = metricsDict[mostLikelyClass]['falsePositive'] + 1
+
+
+                metricsDict[correctClass]['falseNegative'] = metricsDict[correctClass]['falseNegative'] + 1
+
+
+
 
         #Finally
         file.close()
 
         #----------------Overall Evaluation File Section ---------------
+
+        #Metrics for Precision
+        eu_P, ca_P, gl_P, es_P, en_P, pt_P = 0.00
+
+        #Metrics for Recall
+        eu_R, ca_R, gl_R, es_R, en_R, pt_R = 0.00
+
+
+        #Metrics for F1-measure
+        eu_F, ca_F, gl_F, es_F, en_F, pt_F = 0.00
+
+        #macro-F1 & weighted-average-F1
+        macroF1, weightedAvgF1 = 0.00
 
         #Compose file name
         evalFileName = "eval_" + str(len(self.vocabulary)) +"_"+ str(self.ngram) +"_"+ str(self.smoothing) +".txt"
