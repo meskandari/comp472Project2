@@ -74,6 +74,15 @@ class LangModel:
         self.EN = self.generateMatrix_m(self.ngram, self.vocabulary , self.smoothing)
         self.PT = self.generateMatrix_m(self.ngram, self.vocabulary , self.smoothing)
 
+        self.languageProbability = {
+            Language.EU: 0.0,
+            Language.CA: 0.0,
+            Language.GL: 0.0,
+            Language.ES: 0.0,
+            Language.EN: 0.0,
+            Language.PT: 0.0
+        }
+
         # test--------------------------
         #self.increaseSeenEventGivenToken_MatrixModel("abc" , 0)
         #self.increaseSeenEventGivenToken_MatrixModel("abc" , 0)
@@ -370,7 +379,8 @@ class LangModel:
        
         
         if self.ngram ==1 :
-            return (switcherLanguage.get(language)[switcherVocabularyType.get(self.vocabularyType)[token]])
+            table = switcherLanguage.get(language)
+            return table[switcherVocabularyType.get(self.vocabularyType)[token]] / table[-1]
         
         elif self.ngram==2:
             return(switcherLanguage.get(language)[switcherVocabularyType.get(self.vocabularyType)[token[0]]][switcherVocabularyType.get(self.vocabularyType)[token[1]]])
@@ -404,14 +414,22 @@ class LangModel:
 
     def generateProbabilityTable(self):
         self.splitTrainingFile()
+        countOfTweets = 0
 
         # read trainingFile[i][3] character by character, convert to lower case if using vocabulary 0
         if self.vocabularyType == 0:
             for line in self.trainingFile:
-                self.parseNgrams(self.stringToLanguageEnum(line[2]), line[3].lower())
+                countOfTweets += 1
+                self.languageProbability[self.stringToLanguageEnum(line[2])] += 1
+                self.parseNgrams(self.stringToLanguageEnum(line[2]), line[-1].lower())
         else:
             for line in self.trainingFile:
-                self.parseNgrams(self.stringToLanguageEnum(line[2]), line[3])
+                countOfTweets += 1
+                self.languageProbability[self.stringToLanguageEnum(line[2])] += 1
+                self.parseNgrams(self.stringToLanguageEnum(line[2]), line[-1])
+
+        for k in self.languageProbability.keys():
+            self.languageProbability[k] /= countOfTweets
 
     def splitTrainingFile(self):
         for i in range(len(self.trainingFile)):
@@ -419,7 +437,7 @@ class LangModel:
             self.trainingFile[i] = self.trainingFile[i].split("\t", 3)
 
             # remove trailing newline character at the end of the tweet
-            self.trainingFile[i][3] = self.trainingFile[i][3][0:len(self.trainingFile[i][3])-1]
+            self.trainingFile[i][-1] = self.trainingFile[i][-1][0:len(self.trainingFile[i][-1])-1]
 
     def stringToLanguageEnum(self, str):
         if str == "eu":
@@ -434,6 +452,24 @@ class LangModel:
             return Language.EN
         elif str == "pt":
             return Language.PT
+        else:
+            return None
+
+    def LanguageEnumToString(self, language):
+        if language == Language.EU:
+            return "eu"
+        elif language == Language.CA:
+            return "ca"
+        elif language == Language.GL:
+            return "gl"
+        elif language == Language.ES:
+            return "es"
+        elif language == Language.EN:
+            return "en"
+        elif language == Language.PT:
+            return "pt"
+        else:
+            return None
 
     def existsInVocab(self, str):
         for character in str:
@@ -442,24 +478,62 @@ class LangModel:
         return True
 
     def parseNgrams(self, language, str):
-        if self.ngram == 1:
-            for i in range(len(str) - self.ngram):
-                substr = str[i:(i + self.ngram)]
-                if self.existsInVocab(substr):
-                    self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
+        if language:
+            if self.ngram == 1:
+                for i in range(len(str) - self.ngram):
+                    substr = str[i:(i + self.ngram)]
+                    if self.existsInVocab(substr):
+                        self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
 
-        elif self.ngram == 2:
-            for i in range(len(str) - self.ngram):
-                substr = str[i:(i + self.ngram)]
-                if self.existsInVocab(substr):
-                    self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
+            elif self.ngram == 2:
+                for i in range(len(str) - self.ngram):
+                    substr = str[i:(i + self.ngram)]
+                    if self.existsInVocab(substr):
+                        self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
 
-        elif self.ngram == 3:
-            for i in range(len(str) - self.ngram):
-                substr = str[i:(i + self.ngram)]
-                if self.existsInVocab(substr):
-                    self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
+            elif self.ngram == 3:
+                for i in range(len(str) - self.ngram):
+                    substr = str[i:(i + self.ngram)]
+                    if self.existsInVocab(substr):
+                        self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
 
+    def processTweet(self, line):
+         line = line.split("\t", 3)
+         # remove trailing newline character
+         line[-1] = line[-1][0:len(line[-1]) - 1]
+
+         probabilities = {
+            Language.EU: 0.0,
+            Language.CA: 0.0,
+            Language.GL: 0.0,
+            Language.ES: 0.0,
+            Language.EN: 0.0,
+            Language.PT: 0.0
+        }
+
+         if self.ngram == 1:
+             for i in range(len(line[-1]) - self.ngram):
+                 substr = line[-1][i:(i + self.ngram)]
+                 if self.existsInVocab(substr):
+                     for k in probabilities.keys():
+                         probabilities[k] += np.log10(self.getProbabilityGivenToken_MatrixModel(substr, int(k)))
+
+             highestPair = [None, float("-inf")]
+             for k in probabilities.keys():
+                  probabilities[k] += np.log10(self.languageProbability[k])
+                  if probabilities[k] > highestPair[1]:
+                       highestPair[0] = k
+                       highestPair[1] = probabilities[k]
+             
+             result = list()
+             result.append(line[0])
+             result.append(self.LanguageEnumToString(highestPair[0]))
+             result.append(highestPair[1])
+             result.append(line[2])
+             result.append("correct" if result[1] == result[3] else "wrong")
+
+             return result
+            
     def printResults(self,listResults, byomFlag=0):
 
         #----------------Trace File Section-----------------------------
@@ -600,15 +674,12 @@ class LangModel:
         evalOverallOutputString = str(macroF1) + "  " + str(weightedAvgF1) + "\n"
         file.write(evalOverallOutputString)
 
-
-
         #Finally
         file.close()
-        
 
-#MAIN
+# Main
 
-test = LangModel(0, 3)
+test = LangModel(2, 1)
 test.generateProbabilityTable()
-
-print(test.EU)
+for i in range(len(test.testingFile)):
+    print(test.processTweet(test.testingFile[i]))
