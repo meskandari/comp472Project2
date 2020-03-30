@@ -533,6 +533,149 @@ class LangModel:
              result.append("correct" if result[1] == result[3] else "wrong")
 
              return result
+            
+    def printResults(self,listResults, byomFlag=0):
+
+        #----------------Trace File Section-----------------------------
+        
+        #Metrics for Accuracy
+        countWrong, countCorrect = 0
+
+        #Metrics for True Positive
+        metricsDict = {'eu':{'truePositive':0, 'falsePositive':0,'falseNegative':0, 'modelCount':0},
+                       'ca':{'truePositive':0, 'falsePositive':0,'falseNegative':0, 'modelCount':0},
+                       'gl':{'truePositive':0, 'falsePositive':0,'falseNegative':0, 'modelCount':0},
+                       'es':{'truePositive':0, 'falsePositive':0,'falseNegative':0, 'modelCount':0},
+                       'en':{'truePositive':0, 'falsePositive':0,'falseNegative':0, 'modelCount':0},
+                       'pt':{'truePositive':0, 'falsePositive':0,'falseNegative':0, 'modelCount':0}}
+               
+        #Compose file name
+        traceFileName = "trace_" + str(len(self.vocabulary)) +"_"+ str(self.ngram) +"_"+ str(self.smoothing) +".txt"
+        
+        #Hard code file name for Build Your Own Model
+        if byomFlag == 1:
+            traceFileName = "trace_myModel.txt"
+            
+        #Open file
+        file = open(traceFileName, 'w')
+
+        for i in range(len(self.testingFile)):
+            result = self.processTweet(self.testingFile[i])
+       
+            #Map out each entry passed
+            tweetID = str(result[0])
+            mostLikelyClass = str(result[1])
+            mostLikelyScore = str(result[2])
+            correctClass = str(result[3])
+            outcome = str(result[4]) 
+
+            traceOutputString = tweetID + "  " + mostLikelyClass + "  " + mostLikelyScore + "  " + correctClass + "  " + outcome + "\n"
+            file.write(traceOutputString)
+
+            #Increase the counter of the model by 1
+            metricsDict[correctClass]['modelCount'] = metricsDict[correctClass]['modelCount'] + 1
+
+            if outcome=="correct":
+                
+                #Increase the Correct counter by 1
+                countCorrect = countCorrect + 1
+            
+                #+1 the model of the correctClass/mostLikelyClass as they are one and the same
+                metricsDict[correctClass]['truePositive'] = metricsDict[correctClass]['truePositive'] + 1
+
+             
+            else:
+                
+                #Increase the Wrong counter by 1
+                countWrong = countWrong + 1
+
+                #+1 the model of the correctClass for not recognizing a tweet in its language
+                metricsDict[correctClass]['falseNegative'] = metricsDict[correctClass]['falseNegative'] + 1
+
+                #+1 the model of the mostLikelyClass for thinking tweet belongs to its language
+                metricsDict[mostLikelyClass]['falsePositive'] = metricsDict[mostLikelyClass]['falsePositive'] + 1
+
+
+        #Finally
+        file.close()
+
+        #----------------Overall Evaluation File Section ---------------
+
+        #Metrics for Precision
+        eu_P, ca_P, gl_P, es_P, en_P, pt_P = 0.00
+
+        eu_P = float(metricsDict['eu']['truePositive'])/(float(metricsDict['eu']['truePositive'])/float(float(metricsDict['eu']['falsePositive']))
+        ca_P = float(metricsDict['ca']['truePositive'])/(float(metricsDict['ca']['truePositive'])/float(float(metricsDict['ca']['falsePositive']))
+        gl_P = float(metricsDict['gl']['truePositive'])/(float(metricsDict['gl']['truePositive'])/float(float(metricsDict['gl']['falsePositive']))
+        es_P = float(metricsDict['es']['truePositive'])/(float(metricsDict['es']['truePositive'])/float(float(metricsDict['es']['falsePositive']))
+        en_P = float(metricsDict['en']['truePositive'])/(float(metricsDict['en']['truePositive'])/float(float(metricsDict['en']['falsePositive']))
+        pt_P = float(metricsDict['pt']['truePositive'])/(float(metricsDict['pt']['truePositive'])/float(float(metricsDict['pt']['falsePositive']))
+
+        #Metrics for Recall
+        eu_R, ca_R, gl_R, es_R, en_R, pt_R = 0.00
+
+        eu_R = float(metricsDict['eu']['truePositive'])/(float(metricsDict['eu']['truePositive'])/float(float(metricsDict['eu']['falseNegative']))
+        ca_R = float(metricsDict['ca']['truePositive'])/(float(metricsDict['ca']['truePositive'])/float(float(metricsDict['ca']['falseNegative']))
+        gl_R = float(metricsDict['gl']['truePositive'])/(float(metricsDict['gl']['truePositive'])/float(float(metricsDict['gl']['falseNegative']))
+        es_R = float(metricsDict['es']['truePositive'])/(float(metricsDict['es']['truePositive'])/float(float(metricsDict['es']['falseNegative']))
+        en_R = float(metricsDict['en']['truePositive'])/(float(metricsDict['en']['truePositive'])/float(float(metricsDict['en']['falseNegative']))
+        pt_R = float(metricsDict['pt']['truePositive'])/(float(metricsDict['pt']['truePositive'])/float(float(metricsDict['pt']['falseNegative']))
+
+        #Metrics for F1-measure
+        eu_F, ca_F, gl_F, es_F, en_F, pt_F = 0.00
+
+        fMeasure = 1.00
+
+        eu_F = ((fMeasure**2)*eu_P*eu_R)/(eu_P+eu_R)
+        ca_F = ((fMeasure**2)*ca_P*ca_R)/(ca_P+ca_R)
+        gl_F = ((fMeasure**2)*gl_P*gl_R)/(gl_P+gl_R)
+        es_F = ((fMeasure**2)*es_P*es_R)/(es_P+es_R)
+        en_F = ((fMeasure**2)*en_P*en_R)/(en_P+en_R)
+        pt_F = ((fMeasure**2)*pt_P*pt_R)/(pt_P+pt_R)
+
+        #accuracy , macro-F1 & weighted-average-F1
+        accuracy, macroF1, weightedAvgF1 = 0.00
+
+        #Calculate accuracy
+        accuracy = float(countCorrect)/(float(countCorrect)+float(countWrong))
+
+        #Calculate macro F1 measure
+        macroF1 = (eu_F + ca_F + gl_F + es_F + en_F + pt_F) / 6.00
+
+        #Calculate total count
+        totalCount = float(metricsDict['eu']['modelCount']) + float(metricsDict['ca']['modelCount']) + float(metricsDict['gl']['modelCount']) + float(metricsDict['es']['modelCount']) + float(metricsDict['en']['modelCount']) + float(metricsDict['pt']['modelCount'])
+        
+        #Calculate weighted Average F1
+        weightedAvgF1 = ((float(metricsDict['eu']['modelCount'])*eu_F) + (float(metricsDict['ca']['modelCount'])*ca_F) + (float(metricsDict['gl']['modelCount'])*gl_F) + (float(metricsDict['es']['modelCount'])*es_F) + (float(metricsDict['en']['modelCount'])*en_F) + (float(metricsDict['pt']['modelCount'])*pt_F))/totalCount
+
+
+        #Compose file name
+        evalFileName = "eval_" + str(len(self.vocabulary)) +"_"+ str(self.ngram) +"_"+ str(self.smoothing) +".txt"
+        
+        #Hard code file name for Build Your Own Model
+        if byomFlag == 1:
+            evalFileName = "eval_myModel.txt"
+
+        file = open(evalFileName, 'w')
+
+
+        evalAccuracyOutputString = str(accuracy) + "\n"
+        file.write(evalAccuracyOutputString)
+        
+        evalPrecisionOutputString = str(eu_P) + "  " + str(ca_P) + "  " + str(gl_P) + "  " + str(es_P) + "  " + str(en_P) + "  " + str(pt_P) + "\n"
+        file.write(evalPrecisionOutputString)
+
+        evalRecallOutputString = str(eu_R) + "  " + str(ca_R) + "  " + str(gl_R) + "  " + str(es_R) + "  " + str(en_R) + "  " + str(pt_R) + "\n"
+        file.write(evalRecallOutputString)
+
+        evalF1MeasureOutputString = str(eu_F) + "  " + str(ca_F) + "  " + str(gl_F) + "  " + str(es_F) + "  " + str(en_F) + "  " + str(pt_F) + "\n"
+        file.write(evalF1MeasureOutputString)
+
+        evalOverallOutputString = str(macroF1) + "  " + str(weightedAvgF1) + "\n"
+        file.write(evalOverallOutputString)
+
+        #Finally
+        file.close()
 
 # Main
 
