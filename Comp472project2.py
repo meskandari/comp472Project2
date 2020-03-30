@@ -482,11 +482,13 @@ class LangModel:
         if byomFlag == 1:
             traceFileName = "trace_myModel.txt"
             
+        #Open file
         file = open(traceFileName, 'w')
 
         for i in range(len(self.testingFile)):
             result = self.processTweet(self.testingFile[i])
        
+            #Map out each entry passed
             tweetID = str(result[0])
             mostLikelyClass = str(result[1])
             mostLikelyScore = str(result[2])
@@ -505,15 +507,14 @@ class LangModel:
 
             else:
                 
+                #Ding the Wrong counter
                 countWrong = countWrong + 1
 
-                metricsDict[mostLikelyClass]['falsePositive'] = metricsDict[mostLikelyClass]['falsePositive'] + 1
-
-
+                #Ding the model of the correctClass for not recognizing a tweet in its language
                 metricsDict[correctClass]['falseNegative'] = metricsDict[correctClass]['falseNegative'] + 1
 
-
-
+                #Ding the model of the mostLikelyClass for thinking tweet belongs to its language
+                metricsDict[mostLikelyClass]['falsePositive'] = metricsDict[mostLikelyClass]['falsePositive'] + 1
 
         #Finally
         file.close()
@@ -523,9 +524,22 @@ class LangModel:
         #Metrics for Precision
         eu_P, ca_P, gl_P, es_P, en_P, pt_P = 0.00
 
+        eu_P = float(metricsDict['eu']['truePositive'])/(float(metricsDict['eu']['truePositive'])/float(float(metricsDict['eu']['falsePositive']))
+        ca_P = float(metricsDict['ca']['truePositive'])/(float(metricsDict['ca']['truePositive'])/float(float(metricsDict['ca']['falsePositive']))
+        gl_P = float(metricsDict['gl']['truePositive'])/(float(metricsDict['gl']['truePositive'])/float(float(metricsDict['gl']['falsePositive']))
+        es_P = float(metricsDict['es']['truePositive'])/(float(metricsDict['es']['truePositive'])/float(float(metricsDict['es']['falsePositive']))
+        en_P = float(metricsDict['en']['truePositive'])/(float(metricsDict['en']['truePositive'])/float(float(metricsDict['en']['falsePositive']))
+        pt_P = float(metricsDict['pt']['truePositive'])/(float(metricsDict['pt']['truePositive'])/float(float(metricsDict['pt']['falsePositive']))
+
         #Metrics for Recall
         eu_R, ca_R, gl_R, es_R, en_R, pt_R = 0.00
 
+        eu_P = float(metricsDict['eu']['truePositive'])/(float(metricsDict['eu']['truePositive'])/float(float(metricsDict['eu']['falseNegative']))
+        ca_P = float(metricsDict['ca']['truePositive'])/(float(metricsDict['ca']['truePositive'])/float(float(metricsDict['ca']['falseNegative']))
+        gl_P = float(metricsDict['gl']['truePositive'])/(float(metricsDict['gl']['truePositive'])/float(float(metricsDict['gl']['falseNegative']))
+        es_P = float(metricsDict['es']['truePositive'])/(float(metricsDict['es']['truePositive'])/float(float(metricsDict['es']['falseNegative']))
+        en_P = float(metricsDict['en']['truePositive'])/(float(metricsDict['en']['truePositive'])/float(float(metricsDict['en']['falseNegative']))
+        pt_P = float(metricsDict['pt']['truePositive'])/(float(metricsDict['pt']['truePositive'])/float(float(metricsDict['pt']['falseNegative']))
 
         #Metrics for F1-measure
         eu_F, ca_F, gl_F, es_F, en_F, pt_F = 0.00
