@@ -63,6 +63,7 @@ class LangModel:
         self.trainingFile = self.getTrainingFile("training-tweets.txt")
         #self.trainingFile = self.getTrainingFile(trainingFile)
 
+        #self.testingFile = self.getTestFile("training-tweets.txt")
         self.testingFile = self.getTestFile("test-tweets-given.txt")
         #self.testingFile = self.getTestFile(testingFile)
 
@@ -164,7 +165,7 @@ class LangModel:
 
         try:
             # read the data into a list
-            with open(str(fileName), encoding="utf8") as file:
+            with open(str(fileName), encoding='utf-8-sig') as file:
                 dataSet = file.readlines()
 
         except FileNotFoundError :
@@ -181,7 +182,7 @@ class LangModel:
                 
                 try:
                     # read the data into a list
-                    with open(str(fileName), encoding="utf8") as file:
+                    with open(str(fileName), encoding='utf-8-sig') as file:
                         dataSet = file.readlines()
 
                 except FileNotFoundError :
@@ -197,7 +198,7 @@ class LangModel:
                     fileName = "training-tweets.txt"
 
                     # read the data into a list
-                    with open(str(fileName), encoding="utf8") as file:
+                    with open(str(fileName), encoding='utf-8-sig') as file:
                         dataSet = file.readlines()
 
                     interrupt = True
@@ -213,7 +214,7 @@ class LangModel:
 
         try:
             # read the data into a list
-            with open(str(fileName), encoding="utf8") as file:
+            with open(str(fileName), encoding='utf-8-sig') as file:
                 dataSet = file.readlines()
 
         except FileNotFoundError :
@@ -231,7 +232,7 @@ class LangModel:
                 
                 try:
                     # read the data into a list
-                    with open(str(fileName), encoding="utf8") as file:
+                    with open(str(fileName), encoding='utf-8-sig') as file:
                         dataSet = file.readlines()
 
                 except FileNotFoundError :
@@ -247,7 +248,7 @@ class LangModel:
                     fileName = "test-tweets-given.txt"
 
                         # read the data into a list
-                    with open(str(fileName), encoding="utf8") as file:
+                    with open(str(fileName), encoding='utf-8-sig') as file:
                         dataSet = file.readlines()
 
                     interrupt = True
@@ -376,16 +377,21 @@ class LangModel:
              4: self.EN,
              5: self.PT
             }
-       
         
         if self.ngram ==1 :
             table = switcherLanguage.get(language)
             return table[switcherVocabularyType.get(self.vocabularyType)[token]] / table[-1]
-        
         elif self.ngram==2:
-            return(switcherLanguage.get(language)[switcherVocabularyType.get(self.vocabularyType)[token[0]]][switcherVocabularyType.get(self.vocabularyType)[token[1]]])
+            table = switcherLanguage.get(language)
+            row = table[switcherVocabularyType.get(self.vocabularyType)[token[0]]]
+            return row[switcherVocabularyType.get(self.vocabularyType)[token[1]]] / row[-1]
+            #return(switcherLanguage.get(language)[switcherVocabularyType.get(self.vocabularyType)[token[0]]][switcherVocabularyType.get(self.vocabularyType)[token[1]]])
         else:
-          return(switcherLanguage.get(language)[switcherVocabularyType.get(self.vocabularyType)[token[0]]][switcherVocabularyType.get(self.vocabularyType)[token[1]]][switcherVocabularyType.get(self.vocabularyType)[token[2]]]) 
+            table = switcherLanguage.get(language)
+            row = table[switcherVocabularyType.get(self.vocabularyType)[token[0]]]
+            depth = row[switcherVocabularyType.get(self.vocabularyType)[token[1]]]
+            return depth[switcherVocabularyType.get(self.vocabularyType)[token[2]]] / depth[-1]
+            #return(switcherLanguage.get(language)[switcherVocabularyType.get(self.vocabularyType)[token[0]]][switcherVocabularyType.get(self.vocabularyType)[token[1]]][switcherVocabularyType.get(self.vocabularyType)[token[2]]]) 
   
     def generateIndexByVocabulary(self):
         for i in range(3):
@@ -413,21 +419,29 @@ class LangModel:
         return ngramDict
 
     def generateProbabilityTable(self):
+        # split the training file by tabs
         self.splitTrainingFile()
-        countOfTweets = 0
 
-        # read trainingFile[i][3] character by character, convert to lower case if using vocabulary 0
+        # read trainingFile[i][-1] character by character, convert to lower case if using vocabulary 0
+        countOfTweets = 0
         if self.vocabularyType == 0:
             for line in self.trainingFile:
                 countOfTweets += 1
-                self.languageProbability[self.stringToLanguageEnum(line[2])] += 1
-                self.parseNgrams(self.stringToLanguageEnum(line[2]), line[-1].lower())
+                language = self.stringToLanguageEnum(line[2])
+
+                # increment the occurences of this particular language, and the occurences of the ngrams
+                self.languageProbability[language] += 1
+                self.parseNgrams(language, line[-1].lower())
         else:
             for line in self.trainingFile:
                 countOfTweets += 1
-                self.languageProbability[self.stringToLanguageEnum(line[2])] += 1
-                self.parseNgrams(self.stringToLanguageEnum(line[2]), line[-1])
+                language = self.stringToLanguageEnum(line[2])
 
+                # increment the occurences of this particular language, and the occurences of the ngrams
+                self.languageProbability[language] += 1
+                self.parseNgrams(language, line[-1])
+
+        # calculate P(language) by divind occurences by the total number of tweets
         for k in self.languageProbability.keys():
             self.languageProbability[k] /= countOfTweets
 
@@ -478,31 +492,19 @@ class LangModel:
         return True
 
     def parseNgrams(self, language, str):
-        if language:
-            if self.ngram == 1:
-                for i in range(len(str) - self.ngram):
-                    substr = str[i:(i + self.ngram)]
-                    if self.existsInVocab(substr):
-                        self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
-
-            elif self.ngram == 2:
-                for i in range(len(str) - self.ngram):
-                    substr = str[i:(i + self.ngram)]
-                    if self.existsInVocab(substr):
-                        self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
-
-            elif self.ngram == 3:
-                for i in range(len(str) - self.ngram):
-                    substr = str[i:(i + self.ngram)]
-                    if self.existsInVocab(substr):
-                        self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
+        for i in range(len(str) - self.ngram):
+            substr = str[i:(i + self.ngram)]
+            if self.existsInVocab(substr):
+                self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
 
     def processTweet(self, line):
-         line = line.split("\t", 3)
-         # remove trailing newline character
-         line[-1] = line[-1][0:len(line[-1]) - 1]
+        # split the line in the training file by tabs
+        line = line.split("\t", 3)
+        # remove trailing newline character
+        line[-1] = line[-1][0:len(line[-1]) - 1]
 
-         probabilities = {
+        # dictionary to store scores
+        score = {
             Language.EU: 0.0,
             Language.CA: 0.0,
             Language.GL: 0.0,
@@ -511,35 +513,37 @@ class LangModel:
             Language.PT: 0.0
         }
 
-         if self.ngram == 1:
-             for i in range(len(line[-1]) - self.ngram):
-                 substr = line[-1][i:(i + self.ngram)]
-                 if self.existsInVocab(substr):
-                     for k in probabilities.keys():
-                         probabilities[k] += np.log10(self.getProbabilityGivenToken_MatrixModel(substr, int(k)))
+        # token = "aabbc"
+        # P(EU) + P(a|a) + P(b|a) + P(b|b) + P(c|b)
+        for i in range(len(line[-1]) - self.ngram):
+            substr = line[-1][i:(i + self.ngram)]
+            if self.existsInVocab(substr):
+                for k in score.keys():
+                    score[k] += np.log10(self.getProbabilityGivenToken_MatrixModel(substr, int(k)))
 
-             highestPair = [None, float("-inf")]
-             for k in probabilities.keys():
-                  probabilities[k] += np.log10(self.languageProbability[k])
-                  if probabilities[k] > highestPair[1]:
-                       highestPair[0] = k
-                       highestPair[1] = probabilities[k]
+        highestPair = [None, float("-inf")]
+        for k in score.keys():
+            #score[k] += np.log10(self.languageProbability[k])
+            if score[k] > highestPair[1]:
+                highestPair[0] = k
+                highestPair[1] = score[k]
              
-             result = list()
-             result.append(line[0])
-             result.append(self.LanguageEnumToString(highestPair[0]))
-             result.append(highestPair[1])
-             result.append(line[2])
-             result.append("correct" if result[1] == result[3] else "wrong")
+        result = list()
+        result.append(line[0])
+        result.append(self.LanguageEnumToString(highestPair[0]))
+        result.append(highestPair[1])
+        result.append(line[2])
+        result.append("correct" if result[1] == result[3] else "wrong")
 
-             return result
+        return result
             
-    def printResults(self,listResults, byomFlag=0):
+    def printResults(self,byomFlag=0):
 
         #----------------Trace File Section-----------------------------
         
         #Metrics for Accuracy
-        countWrong, countCorrect = 0
+        countWrong = 0
+        countCorrect = 0
 
         #Metrics for True Positive
         metricsDict = {'eu':{'truePositive':0, 'falsePositive':0,'falseNegative':0, 'modelCount':0},
@@ -602,39 +606,141 @@ class LangModel:
         #----------------Overall Evaluation File Section ---------------
 
         #Metrics for Precision
-        eu_P, ca_P, gl_P, es_P, en_P, pt_P = 0.00
+        #eu_P = ca_P = gl_P = es_P = en_P = pt_P = 0.00
 
-        eu_P = float(metricsDict['eu']['truePositive'])/(float(metricsDict['eu']['truePositive'])/float(float(metricsDict['eu']['falsePositive'])))
-        ca_P = float(metricsDict['ca']['truePositive'])/(float(metricsDict['ca']['truePositive'])/float(float(metricsDict['ca']['falsePositive'])))
-        gl_P = float(metricsDict['gl']['truePositive'])/(float(metricsDict['gl']['truePositive'])/float(float(metricsDict['gl']['falsePositive'])))
-        es_P = float(metricsDict['es']['truePositive'])/(float(metricsDict['es']['truePositive'])/float(float(metricsDict['es']['falsePositive'])))
-        en_P = float(metricsDict['en']['truePositive'])/(float(metricsDict['en']['truePositive'])/float(float(metricsDict['en']['falsePositive'])))
-        pt_P = float(metricsDict['pt']['truePositive'])/(float(metricsDict['pt']['truePositive'])/float(float(metricsDict['pt']['falsePositive'])))
+        numerator = float(metricsDict['eu']['truePositive'])
+        if numerator == 0:
+            eu_P = 0.0
+        else:
+            eu_P = numerator / (numerator + float(metricsDict['eu']['falsePositive']))
+
+        numerator = float(metricsDict['ca']['truePositive'])
+        if numerator == 0:
+            ca_P = 0.0
+        else:
+            ca_P = numerator / (numerator + float(metricsDict['ca']['falsePositive']))
+
+        numerator = float(metricsDict['gl']['truePositive'])
+        if numerator == 0:
+            gl_P = 0.0
+        else:
+            gl_P = numerator / (numerator + float(metricsDict['gl']['falsePositive']))
+
+        numerator = float(metricsDict['es']['truePositive'])
+        if numerator == 0:
+            es_P = 0.0
+        else:
+            es_P = numerator / (numerator + float(metricsDict['es']['falsePositive']))
+
+        numerator = float(metricsDict['en']['truePositive'])
+        if numerator == 0:
+            en_P = 0.0
+        else:
+            en_P = numerator / (numerator + float(metricsDict['en']['falsePositive']))
+
+        numerator = float(metricsDict['pt']['truePositive'])
+        if numerator == 0:
+            pt_P = 0.0
+        else:
+            pt_P = numerator / (numerator + float(metricsDict['pt']['falsePositive']))
+
+        #eu_P = float(metricsDict['eu']['truePositive']) / (float(metricsDict['eu']['truePositive'])+float(metricsDict['eu']['falsePositive']))
+        #ca_P = float(metricsDict['ca']['truePositive']) / (float(metricsDict['ca']['truePositive'])+float(metricsDict['ca']['falsePositive']))
+        #gl_P = float(metricsDict['gl']['truePositive']) / (float(metricsDict['gl']['truePositive'])+float(metricsDict['gl']['falsePositive']))
+        #es_P = float(metricsDict['es']['truePositive']) / (float(metricsDict['es']['truePositive'])+float(metricsDict['es']['falsePositive']))
+        #en_P = float(metricsDict['en']['truePositive']) / (float(metricsDict['en']['truePositive'])+float(metricsDict['en']['falsePositive']))
+        #pt_P = float(metricsDict['pt']['truePositive']) / (float(metricsDict['pt']['truePositive'])+float(metricsDict['pt']['falsePositive']))
 
         #Metrics for Recall
-        eu_R, ca_R, gl_R, es_R, en_R, pt_R = 0.00
+        #eu_R = ca_R = gl_R = es_R = en_R = pt_R = 0.00
 
-        eu_R = float(metricsDict['eu']['truePositive'])/(float(metricsDict['eu']['truePositive'])/float(float(metricsDict['eu']['falseNegative'])))
-        ca_R = float(metricsDict['ca']['truePositive'])/(float(metricsDict['ca']['truePositive'])/float(float(metricsDict['ca']['falseNegative'])))
-        gl_R = float(metricsDict['gl']['truePositive'])/(float(metricsDict['gl']['truePositive'])/float(float(metricsDict['gl']['falseNegative'])))
-        es_R = float(metricsDict['es']['truePositive'])/(float(metricsDict['es']['truePositive'])/float(float(metricsDict['es']['falseNegative'])))
-        en_R = float(metricsDict['en']['truePositive'])/(float(metricsDict['en']['truePositive'])/float(float(metricsDict['en']['falseNegative'])))
-        pt_R = float(metricsDict['pt']['truePositive'])/(float(metricsDict['pt']['truePositive'])/float(float(metricsDict['pt']['falseNegative'])))
+        numerator = float(metricsDict['eu']['truePositive'])
+        if numerator == 0:
+            eu_R = 0.0
+        else:
+            eu_R = numerator / (numerator + float(metricsDict['eu']['falseNegative']))
+
+        numerator = float(metricsDict['ca']['truePositive'])
+        if numerator == 0:
+            ca_R = 0.0
+        else:
+            ca_R = numerator / (numerator + float(metricsDict['ca']['falseNegative']))
+
+        numerator = float(metricsDict['gl']['truePositive'])
+        if numerator == 0:
+            gl_R = 0.0
+        else:
+            gl_R = numerator / (numerator + float(metricsDict['gl']['falseNegative']))
+
+        numerator = float(metricsDict['es']['truePositive'])
+        if numerator == 0:
+            es_R = 0.0
+        else:
+            es_R = numerator / (numerator + float(metricsDict['es']['falseNegative']))
+
+        numerator = float(metricsDict['en']['truePositive'])
+        if numerator == 0:
+            en_R = 0.0
+        else:
+            en_R = numerator / (numerator + float(metricsDict['en']['falseNegative']))
+
+        numerator = float(metricsDict['pt']['truePositive'])
+        if numerator == 0:
+            pt_R = 0.0
+        else:
+            pt_R = numerator / (numerator + float(metricsDict['pt']['falseNegative']))
+
+        #eu_R = float(metricsDict['eu']['truePositive'])/(float(metricsDict['eu']['truePositive'])+float(float(metricsDict['eu']['falseNegative'])))
+        #ca_R = float(metricsDict['ca']['truePositive'])/(float(metricsDict['ca']['truePositive'])+float(float(metricsDict['ca']['falseNegative'])))
+        #gl_R = float(metricsDict['gl']['truePositive'])/(float(metricsDict['gl']['truePositive'])+float(float(metricsDict['gl']['falseNegative'])))
+        #es_R = float(metricsDict['es']['truePositive'])/(float(metricsDict['es']['truePositive'])+float(float(metricsDict['es']['falseNegative'])))
+        #en_R = float(metricsDict['en']['truePositive'])/(float(metricsDict['en']['truePositive'])+float(float(metricsDict['en']['falseNegative'])))
+        #pt_R = float(metricsDict['pt']['truePositive'])/(float(metricsDict['pt']['truePositive'])+float(float(metricsDict['pt']['falseNegative'])))
 
         #Metrics for F1-measure
-        eu_F, ca_F, gl_F, es_F, en_F, pt_F = 0.00
+        #eu_F = ca_F = gl_F = es_F = en_F = pt_F = 0.00
 
         fMeasure = 1.00
 
-        eu_F = ((fMeasure**2)*eu_P*eu_R)/(eu_P+eu_R)
-        ca_F = ((fMeasure**2)*ca_P*ca_R)/(ca_P+ca_R)
-        gl_F = ((fMeasure**2)*gl_P*gl_R)/(gl_P+gl_R)
-        es_F = ((fMeasure**2)*es_P*es_R)/(es_P+es_R)
-        en_F = ((fMeasure**2)*en_P*en_R)/(en_P+en_R)
-        pt_F = ((fMeasure**2)*pt_P*pt_R)/(pt_P+pt_R)
+        if eu_P == 0 or eu_R == 0:
+            eu_F = 0.0
+        else:
+            eu_F = (((fMeasure**2) + 1)*eu_P*eu_R)/((fMeasure**2)*eu_P+eu_R)
+
+        if ca_P == 0 or ca_R == 0:
+            ca_F = 0.0
+        else:
+            ca_F = (((fMeasure**2)+1)*ca_P*ca_R)/((fMeasure**2)*ca_P+ca_R)
+
+        if gl_P == 0 or gl_R == 0:
+            gl_F = 0.0
+        else:
+            gl_F = (((fMeasure**2)+1)*gl_P*gl_R)/((fMeasure**2)*gl_P+gl_R)
+
+        if es_P == 0 or es_R == 0:
+            es_F = 0.0
+        else:
+            es_F = (((fMeasure**2)+1)*es_P*es_R)/((fMeasure**2)*es_P+es_R)
+
+        if en_P == 0 or en_R == 0:
+            en_F = 0.0
+        else:
+            en_F = (((fMeasure**2)+1)*en_P*en_R)/((fMeasure**2)*en_P+en_R)
+
+        if pt_P == 0 or pt_R == 0:
+            pt_F = 0.0
+        else:
+            pt_F = (((fMeasure**2)+1)*pt_P*pt_R)/((fMeasure**2)*pt_P+pt_R)
+
+        #eu_F = ((fMeasure**2)*eu_P*eu_R)/(eu_P+eu_R)
+        #ca_F = ((fMeasure**2)*ca_P*ca_R)/(ca_P+ca_R)
+        #gl_F = ((fMeasure**2)*gl_P*gl_R)/(gl_P+gl_R)
+        #es_F = ((fMeasure**2)*es_P*es_R)/(es_P+es_R)
+        #en_F = ((fMeasure**2)*en_P*en_R)/(en_P+en_R)
+        #pt_F = ((fMeasure**2)*pt_P*pt_R)/(pt_P+pt_R)
 
         #accuracy , macro-F1 & weighted-average-F1
-        accuracy, macroF1, weightedAvgF1 = 0.00
+        #accuracy, macroF1, weightedAvgF1 = 0.00
 
         #Calculate accuracy
         accuracy = float(countCorrect)/(float(countCorrect)+float(countWrong))
@@ -679,7 +785,7 @@ class LangModel:
 
 # Main
 
-test = LangModel(2, 1)
+test = LangModel(0, 2, 0.5)
 test.generateProbabilityTable()
-for i in range(len(test.testingFile)):
-    print(test.processTweet(test.testingFile[i]))
+#print(test.languageProbability)
+test.printResults()
