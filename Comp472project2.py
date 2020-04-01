@@ -35,14 +35,14 @@ class NestedDict:
       
         def __init__(self): 
             self.head = collections.defaultdict(dict)
-            self.totalTokens=0
+            self.originalCorpusSize=0
             self.VocabularySize = 26
             self.maxNestedGrade = 2
             self.smoothValue=0.5
     
         def __init__(self , ngram , vocabularySize , smoothValue): 
             self.head = collections.defaultdict(dict)
-            self.totalTokens=0
+            self.originalCorpusSize=0
             self.VocabularySize = vocabularySize
             self.maxNestedGrade = ngram
             self.smoothValue=smoothValue
@@ -51,7 +51,7 @@ class NestedDict:
           
             #check Validation of Token
             if(len(Token)==self.maxNestedGrade):
-                self.totalTokens+=1
+                self.originalCorpusSize+=1
                 currentDict=self.head
                 for i in range (self.maxNestedGrade-1):
                     if(Token[i] not in currentDict):
@@ -67,7 +67,7 @@ class NestedDict:
 
         def getProbabilityGivenToken(self, Token): 
            # NLP slide 50&51 : p(w1w2w3)=(C(w1w2w3)+smooth)/(N+SMOOTH*B)
-           probabilityDenominator=self.totalTokens + ((self.VocabularySize**self.maxNestedGrade)*self.smoothValue)
+           probabilityDenominator=self.originalCorpusSize + ((self.VocabularySize**self.maxNestedGrade)*self.smoothValue)
            probability= 0
            if(len(Token)==self.maxNestedGrade):
                 currentDict=self.head
@@ -92,14 +92,14 @@ class NgramDict:
       
         def __init__(self): 
             self.ngramTable = collections.defaultdict(dict)
-            self.totalTokens=0
+            self.originalCorpusSize=0
             self.VocabularySize = 26
             self.tokenSize = 2
             self.smoothValue=0.5
     
         def __init__(self , ngram , vocabularySize , smoothValue): 
             self.ngramTable = collections.defaultdict(dict)
-            self.totalTokens=0
+            self.originalCorpusSize=0
             self.VocabularySize = vocabularySize
             self.tokenSize = ngram
             self.smoothValue=smoothValue
@@ -108,7 +108,7 @@ class NgramDict:
           
             #check Validation of Token
             if(len(Token)==self.tokenSize):
-                self.totalTokens+=1
+                self.originalCorpusSize+=1
                 
                 if(Token not in self.ngramTable):
                        self.ngramTable[Token]= 1
@@ -117,10 +117,13 @@ class NgramDict:
             else:
                 print("token is not valid!!")
 
-
+        def evaluateSmoothValue(self):
+            #evaluate smooth value such that the fake corpus size will be proportional to original corpus size
+            self.smoothValue= self.originalCorpusSize/(self.VocabularySize**self.tokenSize)
+        
         def getProbabilityGivenToken(self, Token): 
            # NLP slide 50&51 : p(w1w2w3)=(C(w1w2w3)+smooth)/(N+SMOOTH*B)
-           probabilityDenominator=self.totalTokens + ((self.VocabularySize**self.tokenSize)*self.smoothValue)
+           probabilityDenominator=self.originalCorpusSize + ((self.VocabularySize**self.tokenSize)*self.smoothValue)
            probability= 0
            if(len(Token)==self.tokenSize):
                 if(Token in self.ngramTable) :     
@@ -905,6 +908,32 @@ class LangModel:
 
         #Finally
         file.close()
+class LangModel_GroupAwesome(LangModel):
+    #parameterized constructor
+    def __init__(self,vocabulary=-1,ngram=-1,trainingFile="",testingFile="" , filterPatterns=[], specialCharacterSequencesByLanguage={}):
+            LangModel.__init__(self , vocabulary , ngram ,0.0, traitrainingFile , TestestingFile)
+            self.filterPatterns= filterPatterns
+            self.specialCharacterSequencesByLanguage =specialCharacterSequencesByLanguage
+    
+    def filterTrainingSet(self):
+        pass
+
+    def evaluateGivenFeatures(self):
+        pass
+
+    def evaluateAppropriateSmoothValue(self):
+        switcherLanguage = {
+             0: self.EU,
+             1: self.CA,
+             2: self.GL,
+             3: self.ES,
+             4: self.EN,
+             5: self.PT
+            }
+       
+        for i in range (6):
+            table = switcherLanguage.get(i)
+            table.evaluateSmoothVal()
 
 # Main
 
