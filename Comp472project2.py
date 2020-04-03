@@ -157,12 +157,13 @@ class LangModel:
 
 
     #parameterized constructor
-    def __init__(self,vocabulary=-1,ngram=-1,smoothing=0,trainingFile="",testingFile=""):
+    def __init__(self,vocabulary=-1,ngram=-1,smoothing=0,filter=None,trainingFile="",testingFile=""):
         self.generateIndexByVocabulary()
         self.vocabularyType = vocabulary
         self.vocabulary = self.getVocabulary(vocabulary)
         self.ngram = self.getNgram(ngram)
         self.smoothing = self.getSmoothing(smoothing)
+        self.filter = filter
         self.trainingFile = self.getTrainingFile("training-tweets.txt")
         #self.trainingFile = self.getTrainingFile(trainingFile)
 
@@ -610,12 +611,21 @@ class LangModel:
                 return False
         return True
 
+    def filtered(self, word):
+        if word.startswith(self.filter):
+            #print("filtered word " + str(word))
+            return True
+        return False
+
     def parseNgrams(self, language, str):
-        for i in range(len(str) - self.ngram):
-            substr = str[i:(i + self.ngram)]
-            if self.existsInVocab(substr):
-                self.increaseSeenEventGivenToken_NestedDict(substr, int(language))
-                #self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
+        words = str.split()
+        for word in words:
+            if not self.filtered(word):
+                for i in range(len(word) - self.ngram):
+                    substr = word[i:(i + self.ngram)]
+                    if self.existsInVocab(substr):
+                        self.increaseSeenEventGivenToken_NestedDict(substr, int(language))
+                        #self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
 
     def processTweet(self, line):
         # split the line in the training file by tabs
@@ -908,7 +918,7 @@ class LangModel:
 
 # Main
 
-test = LangModel(1, 2, 0.1)
+test = LangModel(0, 1, 0.5, ('@', '#', 'http'))
 test.generateProbabilityTable()
 #print(test.languageProbability)
 test.printResults()
