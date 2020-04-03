@@ -160,13 +160,13 @@ class LangModel:
 
 
     #parameterized constructor
-    def __init__(self,vocabulary=-1,ngram=-1,smoothing=0,filter=None,trainingFile="",testingFile=""):
+    def __init__(self,vocabulary=-1,ngram=-1,smoothing=0,trainingFile="",testingFile=""):
         self.generateIndexByVocabulary()
         self.vocabularyType = vocabulary
         self.vocabulary = self.getVocabulary(vocabulary)
         self.ngram = self.getNgram(ngram)
-        self.smoothing = self.getSmoothing(smoothing)
-        self.filter = filter
+        self.smoothing = smoothing
+        #self.smoothing = self.getSmoothing(smoothing)
         self.trainingFile = self.getTrainingFile("training-tweets.txt")
         #self.trainingFile = self.getTrainingFile(trainingFile)
 
@@ -614,21 +614,12 @@ class LangModel:
                 return False
         return True
 
-    def filtered(self, word):
-        if word.startswith(self.filter):
-            #print("filtered word " + str(word))
-            return True
-        return False
-
     def parseNgrams(self, language, str):
-        words = str.split()
-        for word in words:
-            if not self.filtered(word):
-                for i in range(len(word) - self.ngram):
-                    substr = word[i:(i + self.ngram)]
-                    if self.existsInVocab(substr):
-                        self.increaseSeenEventGivenToken_NestedDict(substr, int(language))
-                        #self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
+        for i in range(len(str) - self.ngram):
+            substr = str[i:(i + self.ngram)]
+            if self.existsInVocab(substr):
+                self.increaseSeenEventGivenToken_NestedDict(substr, int(language))
+                #self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
 
     def processTweet(self, line):
         # split the line in the training file by tabs
@@ -920,11 +911,17 @@ class LangModel:
         file.close()
 class LangModel_GroupAwesome(LangModel):
     #parameterized constructor
-    def __init__(self,vocabulary=-1,ngram=-1,trainingFile="",testingFile="" , filterPatterns=[], specialCharacterSequencesByLanguage={}):
-            LangModel.__init__(self , vocabulary , ngram ,0.0, traitrainingFile , TestestingFile)
+    def __init__(self,vocabulary=-1,ngram=-1,filterPatterns=None,trainingFile="",testingFile="", specialCharacterSequencesByLanguage={}):
+            LangModel.__init__(self , vocabulary , ngram ,0.0, trainingFile , testingFile)
             self.filterPatterns= filterPatterns
             self.specialCharacterSequencesByLanguage =specialCharacterSequencesByLanguage
     
+    def filtered(self, word):
+        if word.startswith(self.filterPatterns):
+            #print("filtered word " + str(word))
+            return True
+        return False
+
     def filterTrainingSet(self):
         pass
 
@@ -943,11 +940,44 @@ class LangModel_GroupAwesome(LangModel):
        
         for i in range (6):
             table = switcherLanguage.get(i)
-            table.evaluateSmoothVal()
+            table.evaluateSmoothValue()
+        
+        
+    def parseNgrams(self, language, str):
+        words = str.split()
+        for word in words:
+            if not self.filtered(word):
+                for i in range(len(word) - self.ngram):
+                    substr = word[i:(i + self.ngram)]
+                    if self.existsInVocab(substr):
+                        self.increaseSeenEventGivenToken_NestedDict(substr, int(language))
+                        #self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
+    def generateProbabilityTable(self):
+        super().generateProbabilityTable()
+        self.evaluateAppropriateSmoothValue()
 
 # Main
 
-test = LangModel(0, 1, 0.5, ('@', '#', 'http'))
+#test = LangModel(0, 1, 0.5)
+#test = LangModel(1, 1, 0.1)
+#test = LangModel(2, 1, 0.01)
+#test = LangModel(0, 2, 0.1)
+#test = LangModel(1, 2, 0.01)
+#test = LangModel(2, 2, 0.001)
+#test = LangModel(0, 3, 0.01)
+#test = LangModel(1, 3, 0.001)
+#test = LangModel(2, 3, 0.0001)
+
+test = LangModel_GroupAwesome(0, 1, ('@', '#', 'http'))
+#test = LangModel_GroupAwesome(1, 1, ('@', '#', 'http'))
+#test = LangModel_GroupAwesome(2, 1, ('@', '#', 'http'))
+#test = LangModel_GroupAwesome(0, 2, ('@', '#', 'http'))
+#test = LangModel_GroupAwesome(1, 2, ('@', '#', 'http'))
+#test = LangModel_GroupAwesome(2, 2, ('@', '#', 'http'))
+#test = LangModel_GroupAwesome(0, 3, ('@', '#', 'http'))
+#test = LangModel_GroupAwesome(1, 3, ('@', '#', 'http'))
+#test = LangModel_GroupAwesome(2, 3, ('@', '#', 'http'))
+
 test.generateProbabilityTable()
 #print(test.languageProbability)
 test.printResults()
