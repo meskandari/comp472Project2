@@ -93,6 +93,7 @@ class NgramDict:
         def __init__(self): 
             self.ngramTable = collections.defaultdict(dict)
             self.originalCorpusSize=0
+            self.fakeCorpusSize=0
             self.VocabularySize = 26
             self.tokenSize = 2
             self.smoothValue=0.5
@@ -119,11 +120,20 @@ class NgramDict:
 
         def evaluateSmoothValue(self):
             #evaluate smooth value such that the fake corpus size will be proportional to original corpus size
-            self.smoothValue= self.originalCorpusSize/(self.VocabularySize**self.tokenSize)
+
+            nonSeenEvent = self.VocabularySize**self.tokenSize - len(self.ngramTable)
+            if(nonSeenEvent > 0):
+              self.smoothValue= self.originalCorpusSize/(self.originalCorpusSize+nonSeenEvent)
+
+            self.fakeCorpusSize=nonSeenEvent*self.smoothValue
+            
         
         def getProbabilityGivenToken(self, Token): 
            # NLP slide 50&51 : p(w1w2w3)=(C(w1w2w3)+smooth)/(N+SMOOTH*B)
-           probabilityDenominator=self.originalCorpusSize + ((self.VocabularySize**self.tokenSize)*self.smoothValue)
+           self.fakeCorpusSize=(self.VocabularySize**self.tokenSize)*self.smoothValue
+           
+           probabilityDenominator=self.originalCorpusSize + self.fakeCorpusSize
+           
            probability= 0
            if(len(Token)==self.tokenSize):
                 if(Token in self.ngramTable) :     
@@ -136,6 +146,26 @@ class NgramDict:
                 print("token is not valid!!")
        
            return probability
+        
+        def getProbabilityGivenToken_discounting(self, Token): 
+          #get smooth value from seen event and give it to unseen events
+          
+          probabilityDenominator=self.originalCorpusSize + self.fakeCorpusSize
+          
+          probability= 0
+          
+          if(len(Token)==self.tokenSize):
+                if(Token in self.ngramTable) :     
+                    value =self.ngramTable[Token]
+                    probability = (value-self.smoothValue)/probabilityDenominator
+                   
+                else :
+                    probability = self.smoothValue/probabilityDenominator
+                    
+          else:
+                print("token is not valid!!")
+       
+          return probability
   
 class LangModel:
     indexByVocabulary_1_dict ={}
@@ -237,7 +267,8 @@ class LangModel:
             1: 1,
             2: 2,
             3: 3,
-            4: 4
+            4: 4,
+            5: 5
             }
         
         return switcher.get(choice,"Invalid selection")
@@ -913,10 +944,10 @@ class LangModel:
 
 class LangModel_GroupAwesome(LangModel):
     #parameterized constructor
-    def __init__(self,vocabulary=-1,ngram=-1,filterPatterns=None,trainingFile="",testingFile="", specialCharacterSequencesByLanguage={}):
+    def __init__(self,vocabulary=-1,ngram=-1,filterPatterns=None,boundryMarkCharacter='_',trainingFile="",testingFile="" ):
             LangModel.__init__(self , vocabulary , ngram ,0.0, trainingFile , testingFile)
             self.filterPatterns= filterPatterns
-            self.specialCharacterSequencesByLanguage =specialCharacterSequencesByLanguage
+            self.boundryMarkCharacter =boundryMarkCharacter
     
     def filtered(self, word):
         if word.startswith(self.filterPatterns):
@@ -924,12 +955,7 @@ class LangModel_GroupAwesome(LangModel):
             return True
         return False
 
-    def filterTrainingSet(self):
-        pass
-
-    def evaluateGivenFeatures(self):
-        pass
-
+    
     def evaluateAppropriateSmoothValue(self):
         switcherLanguage = {
              0: self.EU,
@@ -944,19 +970,91 @@ class LangModel_GroupAwesome(LangModel):
             table = switcherLanguage.get(i)
             table.evaluateSmoothValue()
         
-        
+    def addBoundryCharacter(self , word):
+        #marke beginning and end of words with boundryCharacter to help discover start and end N-grams 
+        #to make the distinction between them and inner-word N-grams.
+        word=self.boundryMarkCharacter+word+self.boundryMarkCharacter
+        return word
+
     def parseNgrams(self, language, str):
         words = str.split()
         for word in words:
             if not self.filtered(word):
+                #marke beginning and end of words with boundryCharacter to help discover start and end N-grams 
+                #to make the distinction between them and inner-word N-grams.
+                word=self.addBoundryCharacter(word)
                 for i in range(len(word) - self.ngram):
                     substr = word[i:(i + self.ngram)]
                     if self.existsInVocab(substr):
                         self.increaseSeenEventGivenToken_NestedDict(substr, int(language))
                         #self.increaseSeenEventGivenToken_MatrixModel(substr, int(language))
+
     def generateProbabilityTable(self):
         super().generateProbabilityTable()
         self.evaluateAppropriateSmoothValue()
+
+    def getProbabilityGivenToken_NestedDict(self , token , language):
+         
+                
+        switcherLanguage = {
+             0: self.EU,
+             1: self.CA,
+             2: self.GL,
+             3: self.ES,
+             4: self.EN,
+             5: self.PT
+            }
+        table = switcherLanguage.get(language)
+        value =table.getProbabilityGivenToken_discounting(token)
+        return value
+
+    def processTweet(self, line):
+        # split the line in the training file by tabs
+        line = line.split("\t", 3)
+        # remove trailing newline character
+        line[-1] = line[-1][0:len(line[-1]) - 1]
+
+        # dictionary to store scores
+        score = {
+            Language.EU: 0.0,
+            Language.CA: 0.0,
+            Language.GL: 0.0,
+            Language.ES: 0.0,
+            Language.EN: 0.0,
+            Language.PT: 0.0
+        }
+
+        # token = "aabbc"
+        # P(EU) + P(a|a) + P(b|a) + P(b|b) + P(c|b)
+        #correct Formula:
+        #score(EU)= P(EU) + P(aa|EU) + P(ab|EU) + P(bb|EU) + P(bc|EU)
+        words = line[-1].split()
+        for word in words:
+            if not self.filtered(word):
+                #marke beginning and end of words with boundryCharacter to help discover start and end N-grams 
+                #to make the distinction between them and inner-word N-grams.
+                word=self.addBoundryCharacter(word)
+                for i in range(len(word) - self.ngram):
+                    substr = word[i:(i + self.ngram)]
+                    if self.existsInVocab(substr):
+                        for k in score.keys():
+                             score[k] += np.log10(self.getProbabilityGivenToken_NestedDict(substr, int(k)))
+        
+        highestPair = [None, float("-inf")]
+        for k in score.keys():
+            score[k] += np.log10(self.languageProbability[k])
+            if score[k] > highestPair[1]:
+                highestPair[0] = k
+                highestPair[1] = score[k]
+             
+        result = list()
+        result.append(line[0])
+        result.append(self.LanguageEnumToString(highestPair[0]))
+        result.append(highestPair[1])
+        result.append(line[2])
+        result.append("correct" if result[1] == result[3] else "wrong")
+
+        return result
 
 # Main
 
@@ -969,18 +1067,26 @@ class LangModel_GroupAwesome(LangModel):
 #test = LangModel(0, 3, 0.01)
 #test = LangModel(1, 3, 0.001)
 #test = LangModel(2, 3, 0.0001)
-#test = LangModel(2, 4, 0.000001)
+#test = LangModel(0, 4, 0.00001)
+#test = LangModel(1, 4, 0.000001)
+#test = LangModel(0, 5, 0.0000001)
+#test = LangModel(1, 5, 0.00000001)
 
 #test = LangModel_GroupAwesome(0, 1, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(1, 1, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(2, 1, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(0, 2, ('@', '#', 'http'))
-#test = LangModel_GroupAwesome(1, 2, ('@', '#', 'http'))
+test = LangModel_GroupAwesome(1, 2, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(2, 2, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(0, 3, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(1, 3, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(2, 3, ('@', '#', 'http'))
-test = LangModel_GroupAwesome(1, 4, ('@', '#', 'http'))
+#test = LangModel_GroupAwesome(0, 4, ('@', '#', 'http'))
+#test = LangModel_GroupAwesome(1, 4, ('@', '#', 'http'))
+#test = LangModel_GroupAwesome(2, 4, ('@', '#', 'http'))
+#test = LangModel_GroupAwesome(0, 5, ('@', '#', 'http'))
+#test = LangModel_GroupAwesome(1, 5, ('@', '#', 'http'))
+#test = LangModel_GroupAwesome(2, 5, ('@', '#', 'http'))
 
 test.generateProbabilityTable()
 #print(test.languageProbability)
