@@ -191,7 +191,7 @@ class LangModel:
 
     #parameterized constructor
     def __init__(self,vocabulary=-1,ngram=-1,smoothing=0,trainingFile="",testingFile=""):
-        self.generateIndexByVocabulary()
+        #self.generateIndexByVocabulary()
         self.vocabularyType = vocabulary
         self.vocabulary = self.getVocabulary(vocabulary)
         self.ngram = self.getNgram(ngram)
@@ -410,7 +410,7 @@ class LangModel:
 
         elif(select==2):
             
-            fileName = "utf8.txt"
+            fileName = "utf8_2.txt"
             dataSet = list()
 
             # read the data into a list
@@ -945,9 +945,10 @@ class LangModel:
 class LangModel_GroupAwesome(LangModel):
     #parameterized constructor
     def __init__(self,vocabulary=-1,ngram=-1,filterPatterns=None,boundryMarkCharacter='_',trainingFile="",testingFile="" ):
+            self.vocabularyType=vocabulary
+            self.boundryMarkCharacter =boundryMarkCharacter
             LangModel.__init__(self , vocabulary , ngram ,0.0, trainingFile , testingFile)
             self.filterPatterns= filterPatterns
-            self.boundryMarkCharacter =boundryMarkCharacter
     
     def filtered(self, word):
         if word.startswith(self.filterPatterns):
@@ -969,7 +970,13 @@ class LangModel_GroupAwesome(LangModel):
         for i in range (6):
             table = switcherLanguage.get(i)
             table.evaluateSmoothValue()
+    
+    def generateVocabulary(self, selection):
         
+        dataSet= super().generateVocabulary(self.vocabularyType)
+        dataSet.append(self.boundryMarkCharacter)
+        return dataSet
+  
     def addBoundryCharacter(self , word):
         #marke beginning and end of words with boundryCharacter to help discover start and end N-grams 
         #to make the distinction between them and inner-word N-grams.
@@ -1060,7 +1067,7 @@ class LangModel_GroupAwesome(LangModel):
 
 #test = LangModel(0, 1, 0.5)
 #test = LangModel(1, 1, 0.1)
-#test = LangModel(2, 1, 0.01)
+test = LangModel(2, 1, 0.01)
 #test = LangModel(0, 2, 0.1)
 #test = LangModel(1, 2, 0.01)
 #test = LangModel(2, 2, 0.001)
@@ -1076,7 +1083,7 @@ class LangModel_GroupAwesome(LangModel):
 #test = LangModel_GroupAwesome(1, 1, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(2, 1, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(0, 2, ('@', '#', 'http'))
-test = LangModel_GroupAwesome(1, 2, ('@', '#', 'http'))
+#test = LangModel_GroupAwesome(1, 2, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(2, 2, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(0, 3, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(1, 3, ('@', '#', 'http'))
