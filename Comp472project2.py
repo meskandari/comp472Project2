@@ -359,24 +359,22 @@ class LangModel:
         elif select == 1:
             dataSet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
 
-        elif select == 2:
-
-            fileName = "utf8_2.txt"
+        elif(select==2):
+            
             dataSet = list()
 
             # read the data into a list
-            with open(str(fileName), encoding = 'utf8') as file:
-                while True:
-                    char = file.read(1)
-                    if not char:
-                        break
-                    if char.isalpha() and char != " ":
-                        dataSet.append(char)
+            # unicode = 17 planes of 2**16 symbols
+            for codepoint in range(17 * 2**16):
+                char = chr(codepoint)
 
+                if(char.isalpha() and char!=" "):
+                    dataSet.append(char)
+            
             #remove duplicates from the dataSet
             if len(dataSet) != len(set(dataSet)):
                 dataSet = list(set(dataSet))
-
+  
         return dataSet
 
     def generateMatrix(self, ngram, vocabulary, smoothingVal):
