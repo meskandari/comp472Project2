@@ -163,9 +163,7 @@ class NgramDict:
           return probabilityGivenToken
 
 class LangModel:
-    indexByVocabulary_1_dict ={}
-    indexByVocabulary_2_dict ={}
-    indexByVocabulary_3_dict ={}
+   
 
     # default constructor
     def __init__(self):
@@ -746,7 +744,6 @@ class LangModel_GroupAwesome(LangModel):
     def __init__(self, vocabulary = -1, ngram = -1, patternsFilter = None, exclusionCharacters = '_', trainingFile = "", testingFile = ""):
         self.exclusionCharacters = exclusionCharacters
         LangModel.__init__(self, vocabulary, ngram, 0.0, trainingFile, testingFile)
-        self.vocabularyType = vocabulary
         self.patternsFilter = patternsFilter
         
     
@@ -771,7 +768,7 @@ class LangModel_GroupAwesome(LangModel):
     
     def generateVocabulary(self, selection):
         
-        dataSet= super().generateVocabulary(self.vocabularyType)
+        dataSet= super().generateVocabulary(selection)
         dataSet.append(self.exclusionCharacters)
         return dataSet
   
@@ -887,7 +884,7 @@ class LangModel_GroupAwesome(LangModel):
 #test = LangModel_GroupAwesome(1, 2, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(2, 2, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(0, 3, ('@', '#', 'http'))
-#test = LangModel_GroupAwesome(1, 3, ('@', '#', 'http'))
+test = LangModel_GroupAwesome(1, 3, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(2, 3, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(0, 4, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(1, 4, ('@', '#', 'http'))
