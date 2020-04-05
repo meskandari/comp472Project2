@@ -360,6 +360,7 @@ class LangModel:
             dataSet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
 
         elif select == 2:
+
             fileName = "utf8_2.txt"
             dataSet = list()
 
@@ -856,10 +857,9 @@ class LangModel_GroupAwesome(LangModel):
     #parameterized constructor
     def __init__(self, vocabulary = -1, ngram = -1, filterPatterns = None, boundryMarkCharacter = '_', trainingFile = "", testingFile = ""):
         LangModel.__init__(self, vocabulary, ngram, 0.0, trainingFile, testingFile)
-		self.vocabularyType=vocabulary
+        self.vocabularyType = vocabulary
         self.filterPatterns = filterPatterns
         self.boundryMarkCharacter = boundryMarkCharacter
-		self.filterPatterns = filterPatterns
     
     def filtered(self, word):
         if word.startswith(self.filterPatterns):
