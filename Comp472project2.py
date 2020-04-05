@@ -969,9 +969,16 @@ class LangModel_GroupAwesome(LangModel):
 
 # Main
 
+#Deliverable 1 tests:
+test = LangModel_GroupAwesome(2, 2, ('@', '#', 'http'))
+test = LangModel(0, 1, 0.00)
+test = LangModel(1, 2, 0.5)
+test = LangModel(1, 3, 1)
+test = LangModel(2, 2, 0.3)
+
 #test = LangModel(0, 1, 0.5)
 #test = LangModel(1, 1, 0.1)
-test = LangModel(2, 1, 0.01)
+#test = LangModel(2, 1, 0.01)
 #test = LangModel(0, 2, 0.1)
 #test = LangModel(1, 2, 0.01)
 #test = LangModel(2, 2, 0.001)
@@ -983,7 +990,7 @@ test = LangModel(2, 1, 0.01)
 #test = LangModel(0, 5, 0.0000001)
 #test = LangModel(1, 5, 0.00000001)
 
-test = LangModel_GroupAwesome(0, 1, ('@', '#', 'http'))
+#test = LangModel_GroupAwesome(0, 1, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(1, 1, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(2, 1, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(0, 2, ('@', '#', 'http'))
