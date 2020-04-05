@@ -37,16 +37,16 @@ class NestedDict:
         def __init__(self): 
             self.head = collections.defaultdict(dict)
             self.originalCorpusSize = 0
-            self.VocabularySize = 26
+            self.vocabularySize = 26
             self.maxNestedGrade = 2
-            self.smoothValue = 0.5
+            self.smoothingValue = 0.5
     
-        def __init__(self, ngram, vocabularySize, smoothValue): 
+        def __init__(self, ngram, vocabularySize, smoothingValue): 
             self.head = collections.defaultdict(dict)
             self.originalCorpusSize = 0
-            self.VocabularySize = vocabularySize
+            self.vocabularySize = vocabularySize
             self.maxNestedGrade = ngram
-            self.smoothValue = smoothValue
+            self.smoothingValue = smoothingValue
        
         def insertToken(self, token): 
             #check validation of token
@@ -69,8 +69,8 @@ class NestedDict:
 
         def getProbabilityGivenToken(self, token): 
            # NLP slide 50&51 : p(w1w2w3)=(C(w1w2w3)+smooth)/(N+SMOOTH*B)
-           probabilityDenominator = self.originalCorpusSize + ((self.VocabularySize ** self.maxNestedGrade) * self.smoothValue)
-           probability = 0
+           probabilityDenominator = self.originalCorpusSize + ((self.vocabularySize ** self.maxNestedGrade) * self.smoothingValue)
+           probabilityGivenToken = 0
 
            if len(token) == self.maxNestedGrade:
                 currentDict = self.head
@@ -78,18 +78,18 @@ class NestedDict:
                     if token[i] in currentDict:
                        currentDict = currentDict[token[i]]
                     else:
-                        return self.smoothValue / probabilityDenominator
+                        return self.smoothingValue / probabilityDenominator
 
                 if token[self.maxNestedGrade - 1] in currentDict:     
                     value = currentDict[token[self.maxNestedGrade - 1]]
-                    probability = (value + self.smoothValue) / probabilityDenominator
+                    probabilityGivenToken = (value + self.smoothingValue) / probabilityDenominator
                 else :
-                    probability = self.smoothValue / probabilityDenominator
+                    probabilityGivenToken = self.smoothingValue / probabilityDenominator
 
            else:
                 print("token is not valid!!")
 
-           return probability
+           return probabilityGivenToken
   
 class NgramDict: 
       
@@ -97,16 +97,16 @@ class NgramDict:
             self.ngramTable = collections.defaultdict(dict)
             self.originalCorpusSize = 0
             self.fakeCorpusSize = 0
-            self.VocabularySize = 26
+            self.vocabularySize = 26
             self.tokenSize = 2
-            self.smoothValue = 0.5
+            self.smoothingValue = 0.5
     
-        def __init__(self, ngram, vocabularySize, smoothValue): 
+        def __init__(self, ngram, vocabularySize, smoothingValue): 
             self.ngramTable = collections.defaultdict(dict)
             self.originalCorpusSize = 0
-            self.VocabularySize = vocabularySize
+            self.vocabularySize = vocabularySize
             self.tokenSize = ngram
-            self.smoothValue = smoothValue
+            self.smoothingValue = smoothingValue
        
         def insertToken(self, token): 
             #check validation of token
@@ -120,47 +120,47 @@ class NgramDict:
             else:
                 print("token is not valid!!")
 
-        def evaluateSmoothValue(self):
-            #evaluate smooth value such that the fake corpus size will be proportional to original corpus size
-            nonSeenEvent = (self.VocabularySize ** self.tokenSize) - len(self.ngramTable)
+        def evaluateSmoothingValue(self):
+            #evaluate smoothing value such that the fake corpus size will be proportional to original corpus size
+            nonSeenEvent = (self.vocabularySize ** self.tokenSize) - len(self.ngramTable)
             if nonSeenEvent > 0:
-              self.smoothValue = self.originalCorpusSize / (self.originalCorpusSize + nonSeenEvent)
+              self.smoothingValue = self.originalCorpusSize / (self.originalCorpusSize + nonSeenEvent)
 
-            self.fakeCorpusSize = nonSeenEvent * self.smoothValue
+            self.fakeCorpusSize = nonSeenEvent * self.smoothingValue
             
         
         def getProbabilityGivenToken(self, token): 
            # NLP slide 50&51 : p(w1w2w3)=(C(w1w2w3)+smooth)/(N+SMOOTH*B)
-           self.fakeCorpusSize = (self.VocabularySize ** self.tokenSize) * self.smoothValue
+           self.fakeCorpusSize = (self.vocabularySize ** self.tokenSize) * self.smoothingValue
            
            probabilityDenominator = self.originalCorpusSize + self.fakeCorpusSize
-           probability = 0
+           probabilityGivenToken = 0
            if len(token) == self.tokenSize:
                if token in self.ngramTable:     
                    value = self.ngramTable[token]
-                   probability = (value + self.smoothValue) / probabilityDenominator
+                   probabilityGivenToken = (value + self.smoothingValue) / probabilityDenominator
                else:
-                   probability = self.smoothValue / probabilityDenominator
+                   probabilityGivenToken = self.smoothingValue / probabilityDenominator
            else:
                 print("token is not valid!!")
 
-           return probability
+           return probabilityGivenToken
 
         def getProbabilityGivenToken_discounting(self, token): 
-          #get smooth value from seen event and give it to unseen events
+          #get smoothing value from seen event and give it to unseen events
           
           probabilityDenominator = self.originalCorpusSize + self.fakeCorpusSize
-          probability = 0
+          probabilityGivenToken = 0
           if len(token) == self.tokenSize:
               if token in self.ngramTable:     
                   value = self.ngramTable[token]
-                  probability = (value - self.smoothValue) / probabilityDenominator
+                  probabilityGivenToken = (value - self.smoothingValue) / probabilityDenominator
               else:
-                  probability = self.smoothValue / probabilityDenominator
+                  probabilityGivenToken = self.smoothingValue / probabilityDenominator
           else:
                 print("token is not valid!!")
 
-          return probability
+          return probabilityGivenToken
 
 class LangModel:
     indexByVocabulary_1_dict ={}
@@ -171,28 +171,27 @@ class LangModel:
     def __init__(self):
         self.vocabulary = self.getVocabulary()
         self.ngram = self.getNgram()
-        self.smoothing = self.getSmoothing()
+        self.smoothingValue = self.getSmoothingValue()
         self.trainingFile = self.getTrainingFile()
         self.testingFile = self.getTestFile()
 
     #parameterized constructor
 
-    def __init__(self, vocabulary = -1, ngram = -1, smoothing = 0, trainingFile = "", testingFile = ""):
-	    #self.generateIndexByVocabulary()
+    def __init__(self, vocabulary = -1, ngram = -1, smoothingValue = 0, trainingFile = "", testingFile = ""):
         self.vocabularyType = vocabulary
         self.vocabulary = self.getVocabulary(vocabulary)
         self.ngram = self.getNgram(ngram)
-        self.smoothing = smoothing
+        self.smoothingValue = smoothingValue
         self.trainingFile = self.getTrainingFile("training-tweets.txt")
         self.testingFile = self.getTestFile("test-tweets-given.txt")
 
         # each language models below will receive a data structure generated by the vocabulary and n-gram parameters
-        self.EU = NgramDict(self.ngram, len(self.vocabulary), self.smoothing)
-        self.CA = NgramDict(self.ngram, len(self.vocabulary), self.smoothing)
-        self.GL = NgramDict(self.ngram, len(self.vocabulary), self.smoothing)
-        self.ES = NgramDict(self.ngram, len(self.vocabulary), self.smoothing)
-        self.EN = NgramDict(self.ngram, len(self.vocabulary), self.smoothing)
-        self.PT = NgramDict(self.ngram, len(self.vocabulary), self.smoothing)
+        self.EU = NgramDict(self.ngram, len(self.vocabulary), self.smoothingValue)
+        self.CA = NgramDict(self.ngram, len(self.vocabulary), self.smoothingValue)
+        self.GL = NgramDict(self.ngram, len(self.vocabulary), self.smoothingValue)
+        self.ES = NgramDict(self.ngram, len(self.vocabulary), self.smoothingValue)
+        self.EN = NgramDict(self.ngram, len(self.vocabulary), self.smoothingValue)
+        self.PT = NgramDict(self.ngram, len(self.vocabulary), self.smoothingValue)
 
         # the overall proportion of each language in the training file ex: P(EU)
         self.languageProbability = {
@@ -242,9 +241,9 @@ class LangModel:
 
         return switcher.get(choice, "Invalid selection")
 
-    def getSmoothing(self, smoothing = 0):
+    def getSmoothingValue(self, smoothingValue = 0):
 
-        choice = smoothing
+        choice = smoothingValue
         if choice == 0 :
             interrupt = False
             count = 0
@@ -353,12 +352,16 @@ class LangModel:
     def generateVocabulary(self, selection):
 
         select = selection
+
+        #Fold the corpus to lowercase and use only the 26 letters of the alphabet [a-z]
         if select == 0:
             dataSet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x','y','z']
 
+        #Distinguish up and low cases and use only the 26 letters of the alphabet [a-z, A-Z]
         elif select == 1:
             dataSet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
 
+        #Distinguish up and low cases and use all characters accepted by the built-in isalpha() method
         elif(select==2):
             
             dataSet = list()
@@ -376,94 +379,6 @@ class LangModel:
                 dataSet = list(set(dataSet))
   
         return dataSet
-
-    def generateMatrix(self, ngram, vocabulary, smoothingVal):
-
-        size = len(vocabulary)
-        ngramMatrix = np.zeros
-
-        if ngram == 1:
-            ngramMatrix = np.full(size + 1, smoothingVal)
-            ngramMatrix[-1] = size * smoothingVal
-           
-        elif ngram == 2:
-            ngramMatrix = np.full((size, size + 1), smoothingVal, dtype = np.half)
-            for row in ngramMatrix:
-                row[-1] = size * smoothingVal
-        
-        elif ngram == 3:
-            ngramMatrix = np.full((size, size, size + 1), smoothingVal, dtype = np.half)
-            for row in ngramMatrix:
-                for depth in row:
-                    depth[-1] = size * smoothingVal
-
-        return ngramMatrix
-         
-    def increaseSeenEventGivenToken_MatrixModel(self, token, language):
-        switcherVocabularyType = {
-            0: LangModel.indexByVocabulary_1_dict,
-            1: LangModel.indexByVocabulary_2_dict,
-            2: LangModel.indexByVocabulary_3_dict
-        }
-         
-        switcherLanguage = {
-             0: self.EU,
-             1: self.CA,
-             2: self.GL,
-             3: self.ES,
-             4: self.EN,
-             5: self.PT
-        }
-       
-        
-        if self.ngram == 1:
-            table = switcherLanguage.get(language)
-            table[switcherVocabularyType.get(self.vocabularyType)[token]] += 1
-            table[-1] += 1
-        
-        elif self.ngram == 2:
-            table = switcherLanguage.get(language)
-            row = table[switcherVocabularyType.get(self.vocabularyType)[token[0]]]
-            row[switcherVocabularyType.get(self.vocabularyType)[token[1]]] += 1
-            row[-1] += 1
-
-        else:
-            table = switcherLanguage.get(language)
-            row = table[switcherVocabularyType.get(self.vocabularyType)[token[0]]]
-            depth = row[switcherVocabularyType.get(self.vocabularyType)[token[1]]]
-            depth[switcherVocabularyType.get(self.vocabularyType)[token[2]]] += 1
-            depth[-1] += 1
-        
-    def getProbabilityGivenToken_MatrixModel(self, token, language):
-        switcherVocabularyType = {
-            0: LangModel.indexByVocabulary_1_dict,
-            1: LangModel.indexByVocabulary_2_dict,
-            2: LangModel.indexByVocabulary_3_dict
-        }
-         
-        switcherLanguage = {
-             0: self.EU,
-             1: self.CA,
-             2: self.GL,
-             3: self.ES,
-             4: self.EN,
-             5: self.PT
-        }
-
-        if self.ngram == 1:
-            table = switcherLanguage.get(language)
-            return table[switcherVocabularyType.get(self.vocabularyType)[token]] / table[-1]
-
-        elif self.ngram == 2:
-            table = switcherLanguage.get(language)
-            row = table[switcherVocabularyType.get(self.vocabularyType)[token[0]]]
-            return row[switcherVocabularyType.get(self.vocabularyType)[token[1]]] / row[-1]
-
-        else:
-            table = switcherLanguage.get(language)
-            row = table[switcherVocabularyType.get(self.vocabularyType)[token[0]]]
-            depth = row[switcherVocabularyType.get(self.vocabularyType)[token[1]]]
-            return depth[switcherVocabularyType.get(self.vocabularyType)[token[2]]] / depth[-1]
 
     def increaseSeenEventGivenToken_NestedDict(self, token, language):   
         switcherLanguage = {
@@ -489,30 +404,9 @@ class LangModel:
         }
 
         table = switcherLanguage.get(language)
+
         return table.getProbabilityGivenToken(token)
         
-    def generateIndexByVocabulary(self):
-        for i in range(3):
-            vocabulary = self.generateVocabulary(i)
-            size = len(vocabulary)
-            indexDict = {}
-            index = 0
-            for j in range(size):
-                 indexDict[vocabulary[j]] = index
-                 index+=1
-            if i == 0:
-                LangModel.indexByVocabulary_1_dict = indexDict
-            
-            elif i == 1:
-                LangModel.indexByVocabulary_2_dict = indexDict
-            else:
-                LangModel.indexByVocabulary_3_dict = indexDict
-
-    def generateDict_m(self, ngram, vocabulary, smoothingVal):
-        size = len(vocabulary)
-        ngramDict = {}
-    
-        return ngramDict
 
     def generateProbabilityTable(self):
         # split the training file by tabs
@@ -644,7 +538,7 @@ class LangModel:
                        'pt':{'truePositive':0, 'falsePositive':0,'falseNegative':0, 'modelCount':0}}
                
         #Compose file name
-        traceFileName = "trace_" + str(len(self.vocabulary)) + "_" + str(self.ngram) + "_" + str(self.smoothing) + ".txt"
+        traceFileName = "trace_" + str(len(self.vocabulary)) + "_" + str(self.ngram) + "_" + str(self.smoothingValue) + ".txt"
         
         #Hard code file name for Build Your Own Model
         if byomFlag == 1:
@@ -696,7 +590,6 @@ class LangModel:
         #----------------Overall Evaluation File Section ---------------
 
         #Metrics for Precision
-        #eu_P = ca_P = gl_P = es_P = en_P = pt_P = 0.00
 
         numerator = float(metricsDict['eu']['truePositive'])
         if numerator == 0:
@@ -735,7 +628,6 @@ class LangModel:
             pt_P = numerator / (numerator + float(metricsDict['pt']['falsePositive']))
 
         #Metrics for Recall
-        #eu_R = ca_R = gl_R = es_R = en_R = pt_R = 0.00
 
         numerator = float(metricsDict['eu']['truePositive'])
         if numerator == 0:
@@ -774,7 +666,6 @@ class LangModel:
             pt_R = numerator / (numerator + float(metricsDict['pt']['falseNegative']))
 
         #Metrics for F1-measure
-        #eu_F = ca_F = gl_F = es_F = en_F = pt_F = 0.00
 
         fMeasure = 1.00
 
@@ -808,8 +699,7 @@ class LangModel:
         else:
             pt_F = ( ((fMeasure ** 2) + 1) * pt_P * pt_R) / ( ((fMeasure ** 2) * pt_P) + pt_R)
 
-        #accuracy , macro-F1 & weighted-average-F1
-        #accuracy, macroF1, weightedAvgF1 = 0.00
+        #--------- accuracy , macro-F1 & weighted-average-F1 ------
 
         #Calculate accuracy
         accuracy = float(countCorrect) / (float(countCorrect) + float(countWrong))
@@ -824,7 +714,7 @@ class LangModel:
         weightedAvgF1 = ((float(metricsDict['eu']['modelCount'])*eu_F) + (float(metricsDict['ca']['modelCount'])*ca_F) + (float(metricsDict['gl']['modelCount'])*gl_F) + (float(metricsDict['es']['modelCount'])*es_F) + (float(metricsDict['en']['modelCount'])*en_F) + (float(metricsDict['pt']['modelCount'])*pt_F)) / totalCount
 
         #Compose file name
-        evalFileName = "eval_" + str(len(self.vocabulary)) + "_" + str(self.ngram) + "_" + str(self.smoothing) + ".txt"
+        evalFileName = "eval_" + str(len(self.vocabulary)) + "_" + str(self.ngram) + "_" + str(self.smoothingValue) + ".txt"
         
         #Hard code file name for Build Your Own Model
         if byomFlag == 1:
@@ -853,19 +743,18 @@ class LangModel:
 
 class LangModel_GroupAwesome(LangModel):
     #parameterized constructor
-    def __init__(self, vocabulary = -1, ngram = -1, filterPatterns = None, boundryMarkCharacter = '_', trainingFile = "", testingFile = ""):
+    def __init__(self, vocabulary = -1, ngram = -1, patternsFilter = None, boundryMarkCharacter = '_', trainingFile = "", testingFile = ""):
         LangModel.__init__(self, vocabulary, ngram, 0.0, trainingFile, testingFile)
         self.vocabularyType = vocabulary
-        self.filterPatterns = filterPatterns
+        self.patternsFilter = patternsFilter
         self.boundryMarkCharacter = boundryMarkCharacter
     
     def filtered(self, word):
-        if word.startswith(self.filterPatterns):
-            #print("filtered word " + str(word))
+        if word.startswith(self.patternsFilter):
             return True
         return False
     
-    def evaluateAppropriateSmoothValue(self):
+    def evaluateAppropriateSmoothingValue(self):
         switcherLanguage = {
              0: self.EU,
              1: self.CA,
@@ -877,7 +766,7 @@ class LangModel_GroupAwesome(LangModel):
        
         for i in range (6):
             table = switcherLanguage.get(i)
-            table.evaluateSmoothValue()
+            table.evaluateSmoothingValue()
     
     def generateVocabulary(self, selection):
         
@@ -905,7 +794,7 @@ class LangModel_GroupAwesome(LangModel):
 
     def generateProbabilityTable(self):
         super().generateProbabilityTable()
-        self.evaluateAppropriateSmoothValue()
+        self.evaluateAppropriateSmoothingValue()
 
     def getProbabilityGivenToken_NestedDict(self, token, language):    
         switcherLanguage = {
@@ -970,11 +859,11 @@ class LangModel_GroupAwesome(LangModel):
 # Main
 
 #Deliverable 1 tests:
-test = LangModel_GroupAwesome(2, 2, ('@', '#', 'http'))
-test = LangModel(0, 1, 0.00)
-test = LangModel(1, 2, 0.5)
-test = LangModel(1, 3, 1)
-test = LangModel(2, 2, 0.3)
+test = LangModel_GroupAwesome(1, 2, ('@', '#', 'http'))
+#test = LangModel(0, 1, 0.00) //DONE
+#test = LangModel(1, 2, 0.5) //DONE
+#test = LangModel(1, 3, 1)  //DONE
+#test = LangModel(2, 2, 0.3) //DONE
 
 #test = LangModel(0, 1, 0.5)
 #test = LangModel(1, 1, 0.1)
