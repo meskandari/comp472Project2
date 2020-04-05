@@ -743,11 +743,12 @@ class LangModel:
 
 class LangModel_GroupAwesome(LangModel):
     #parameterized constructor
-    def __init__(self, vocabulary = -1, ngram = -1, patternsFilter = None, boundryMarkCharacter = '_', trainingFile = "", testingFile = ""):
+    def __init__(self, vocabulary = -1, ngram = -1, patternsFilter = None, exclusionCharacters = '_', trainingFile = "", testingFile = ""):
+        self.exclusionCharacters = exclusionCharacters
         LangModel.__init__(self, vocabulary, ngram, 0.0, trainingFile, testingFile)
         self.vocabularyType = vocabulary
         self.patternsFilter = patternsFilter
-        self.boundryMarkCharacter = boundryMarkCharacter
+        
     
     def filtered(self, word):
         if word.startswith(self.patternsFilter):
@@ -771,13 +772,13 @@ class LangModel_GroupAwesome(LangModel):
     def generateVocabulary(self, selection):
         
         dataSet= super().generateVocabulary(self.vocabularyType)
-        dataSet.append(self.boundryMarkCharacter)
+        dataSet.append(self.exclusionCharacters)
         return dataSet
   
     def addBoundryCharacter(self , word):
         #marke beginning and end of words with boundryCharacter to help discover start and end N-grams 
         #to make the distinction between them and inner-word N-grams.
-        word = self.boundryMarkCharacter + word + self.boundryMarkCharacter
+        word = self.exclusionCharacters + word + self.exclusionCharacters
         return word
 
     def parseNgrams(self, language, str):
@@ -859,7 +860,7 @@ class LangModel_GroupAwesome(LangModel):
 # Main
 
 #Deliverable 1 tests:
-test = LangModel_GroupAwesome(1, 2, ('@', '#', 'http'))
+#test = LangModel_GroupAwesome(1, 2, ('@', '#', 'http')) //DONE
 #test = LangModel(0, 1, 0.00) //DONE
 #test = LangModel(1, 2, 0.5) //DONE
 #test = LangModel(1, 3, 1)  //DONE
