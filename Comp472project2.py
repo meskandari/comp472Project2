@@ -745,6 +745,9 @@ class LangModel_GroupAwesome(LangModel):
         self.exclusionCharacters = exclusionCharacters
         LangModel.__init__(self, vocabulary, ngram, 0.0, trainingFile, testingFile)
         self.patternsFilter = patternsFilter
+
+    def printResults(self):
+        super().printResults(1)
         
     
     def filtered(self, word):
@@ -857,7 +860,7 @@ class LangModel_GroupAwesome(LangModel):
 # Main
 
 #Deliverable 1 tests:
-#test = LangModel_GroupAwesome(1, 2, ('@', '#', 'http')) //DONE
+test = LangModel_GroupAwesome(1, 3, ('@', '#', 'http'))
 #test = LangModel(0, 1, 0.00) //DONE
 #test = LangModel(1, 2, 0.5) //DONE
 #test = LangModel(1, 3, 1)  //DONE
@@ -884,7 +887,7 @@ class LangModel_GroupAwesome(LangModel):
 #test = LangModel_GroupAwesome(1, 2, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(2, 2, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(0, 3, ('@', '#', 'http'))
-test = LangModel_GroupAwesome(1, 3, ('@', '#', 'http'))
+#test = LangModel_GroupAwesome(1, 3, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(2, 3, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(0, 4, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(1, 4, ('@', '#', 'http'))
