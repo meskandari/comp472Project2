@@ -420,7 +420,7 @@ class LangModel:
                 char = file.read(1)
                 if not char:
                   break
-                if(char.isalpha() and char!=" "):
+                if(char.isalpha and char!=" "):
                     dataSet.append(char)
             
             #remove duplicates from the dataSet
@@ -945,7 +945,7 @@ class LangModel:
 class LangModel_GroupAwesome(LangModel):
     #parameterized constructor
     def __init__(self,vocabulary=-1,ngram=-1,filterPatterns=None,boundryMarkCharacter='_',trainingFile="",testingFile="" ):
-           
+            self.vocabularyType=vocabulary
             self.boundryMarkCharacter =boundryMarkCharacter
             LangModel.__init__(self , vocabulary , ngram ,0.0, trainingFile , testingFile)
             self.filterPatterns= filterPatterns
@@ -973,7 +973,7 @@ class LangModel_GroupAwesome(LangModel):
     
     def generateVocabulary(self, selection):
         
-        dataSet= super().generateVocabulary(selection)
+        dataSet= super().generateVocabulary(self.vocabularyType)
         dataSet.append(self.boundryMarkCharacter)
         return dataSet
   
@@ -1081,9 +1081,9 @@ class LangModel_GroupAwesome(LangModel):
 
 #test = LangModel_GroupAwesome(0, 1, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(1, 1, ('@', '#', 'http'))
-#test = LangModel_GroupAwesome(2, 1, ('@', '#', 'http'))
+test = LangModel_GroupAwesome(2, 1, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(0, 2, ('@', '#', 'http'))
-test = LangModel_GroupAwesome(1, 2, ('@', '#', 'http'))
+#test = LangModel_GroupAwesome(1, 2, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(2, 2, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(0, 3, ('@', '#', 'http'))
 #test = LangModel_GroupAwesome(1, 3, ('@', '#', 'http'))
