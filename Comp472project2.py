@@ -945,9 +945,10 @@ class LangModel:
 class LangModel_GroupAwesome(LangModel):
     #parameterized constructor
     def __init__(self,vocabulary=-1,ngram=-1,filterPatterns=None,boundryMarkCharacter='_',trainingFile="",testingFile="" ):
+           
+            self.boundryMarkCharacter =boundryMarkCharacter
             LangModel.__init__(self , vocabulary , ngram ,0.0, trainingFile , testingFile)
             self.filterPatterns= filterPatterns
-            self.boundryMarkCharacter =boundryMarkCharacter
     
     def filtered(self, word):
         if word.startswith(self.filterPatterns):
@@ -969,7 +970,13 @@ class LangModel_GroupAwesome(LangModel):
         for i in range (6):
             table = switcherLanguage.get(i)
             table.evaluateSmoothValue()
+    
+    def generateVocabulary(self, selection):
         
+        dataSet= super().generateVocabulary(selection)
+        dataSet.append(self.boundryMarkCharacter)
+        return dataSet
+  
     def addBoundryCharacter(self , word):
         #marke beginning and end of words with boundryCharacter to help discover start and end N-grams 
         #to make the distinction between them and inner-word N-grams.
