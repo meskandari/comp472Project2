@@ -534,6 +534,13 @@ class LangModel:
                        'es':{'truePositive':0, 'falsePositive':0,'falseNegative':0, 'modelCount':0},
                        'en':{'truePositive':0, 'falsePositive':0,'falseNegative':0, 'modelCount':0},
                        'pt':{'truePositive':0, 'falsePositive':0,'falseNegative':0, 'modelCount':0}}
+
+        confusionMatrixDict = {'eu':{'eu':0, 'ca':0,'gl':0, 'es':0, 'en':0, 'pt':0},
+                               'ca':{'eu':0, 'ca':0,'gl':0, 'es':0, 'en':0, 'pt':0},
+                               'gl':{'eu':0, 'ca':0,'gl':0, 'es':0, 'en':0, 'pt':0},
+                               'es':{'eu':0, 'ca':0,'gl':0, 'es':0, 'en':0, 'pt':0},
+                               'en':{'eu':0, 'ca':0,'gl':0, 'es':0, 'en':0, 'pt':0},
+                               'pt':{'eu':0, 'ca':0,'gl':0, 'es':0, 'en':0, 'pt':0}}
                
         #Compose file name
         traceFileName = "trace_" + str(len(self.vocabulary)) + "_" + str(self.ngram) + "_" + str(self.smoothingValue) + ".txt"
@@ -560,6 +567,8 @@ class LangModel:
 
             #Increase the counter of the model by 1
             metricsDict[correctClass]['modelCount'] += 1
+
+            confusionMatrixDict[mostLikelyClass][correctClass] +=1
 
             if outcome == "correct":
                 
@@ -739,6 +748,10 @@ class LangModel:
         #Finally
         file.close()
 
+        print(metricsDict)
+        print("--------------------")
+        print(confusionMatrixDict)
+
 class LangModel_GroupAwesome(LangModel):
     #parameterized constructor
     def __init__(self, vocabulary = -1, ngram = -1, patternsFilter = None, exclusionCharacters = '_', trainingFile = "", testingFile = ""):
@@ -860,11 +873,11 @@ class LangModel_GroupAwesome(LangModel):
 # Main
 
 #Deliverable 1 tests:
-test = LangModel_GroupAwesome(1, 3, ('@', '#', 'http'))
-#test = LangModel(0, 1, 0.00) //DONE
-#test = LangModel(1, 2, 0.5) //DONE
-#test = LangModel(1, 3, 1)  //DONE
-#test = LangModel(2, 2, 0.3) //DONE
+#test = LangModel_GroupAwesome(1, 3, ('@', '#', 'http'))
+test = LangModel(0, 2, 0.01)
+#test = LangModel(1, 2, 0.5) #DONE
+#test = LangModel(1, 3, 1)   #DONE
+#test = LangModel(2, 2, 0.5) #LONG
 
 #test = LangModel(0, 1, 0.5)
 #test = LangModel(1, 1, 0.1)
