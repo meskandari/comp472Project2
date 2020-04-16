@@ -13,6 +13,9 @@ from operator import itemgetter, attrgetter
 from enum import Enum
 import time
 import collections
+from collections import OrderedDict
+import copy
+import json
 
 # An enum class for flagging the language in use
 class Language(Enum):
@@ -405,7 +408,83 @@ class LangModel:
         table = switcherLanguage.get(language)
 
         return table.getProbabilityGivenToken(token)
+    
+    def outputNgram(self):
+
+        #EU
+        #print("---------EU----------")
+        EU_dict = copy.deepcopy(self.EU.ngramTable)
+        for k in EU_dict.keys():
+            EU_dict[k] /= self.EU.originalCorpusSize  
+        ordered_EU_dict = OrderedDict()
+        ordered_EU_dict = OrderedDict(sorted(EU_dict.items(), key = lambda item: item[1], reverse=True))
+        EU_JSON= json.dumps(ordered_EU_dict)
+        #print(EU_JSON)
+
+        #CA
+        #print("---------CA----------")
+        CA_dict = copy.deepcopy(self.CA.ngramTable)
+        for k in CA_dict.keys():
+            CA_dict[k] /= self.CA.originalCorpusSize  
+        ordered_CA_dict = OrderedDict()
+        ordered_CA_dict = OrderedDict(sorted(CA_dict.items(), key = lambda item: item[1], reverse=True))
+        CA_JSON= json.dumps(ordered_CA_dict)
+        #print(ordered_CA_dict)
         
+        #GL
+        #print("---------GL----------")
+        GL_dict = copy.deepcopy(self.GL.ngramTable)
+        for k in GL_dict.keys():
+            GL_dict[k] /= self.GL.originalCorpusSize  
+        ordered_GL_dict = OrderedDict()
+        ordered_GL_dict = OrderedDict(sorted(GL_dict.items(), key = lambda item: item[1], reverse=True))
+        GL_JSON= json.dumps(ordered_GL_dict)
+        #print(ordered_GL_dict)
+
+        #ES
+        #print("---------ES----------")
+        ES_dict = copy.deepcopy(self.ES.ngramTable)
+        for k in ES_dict.keys():
+            ES_dict[k] /= self.ES.originalCorpusSize  
+        ordered_ES_dict = OrderedDict()
+        ordered_ES_dict = OrderedDict(sorted(ES_dict.items(), key = lambda item: item[1], reverse=True))
+        ES_JSON= json.dumps(ordered_ES_dict)
+        #print(ordered_ES_dict)
+
+        #EN
+        #print("---------EN----------")
+        EN_dict = copy.deepcopy(self.EN.ngramTable)
+        for k in EN_dict.keys():
+            EN_dict[k] /= self.EN.originalCorpusSize  
+        ordered_EN_dict = OrderedDict()
+        ordered_EN_dict = OrderedDict(sorted(EN_dict.items(), key = lambda item: item[1], reverse=True))
+        EN_JSON= json.dumps(ordered_EN_dict)
+        #print(ordered_EN_dict)
+        
+        #PT
+        #print("---------PT----------")
+        PT_dict = copy.deepcopy(self.PT.ngramTable)
+        for k in PT_dict.keys():
+            PT_dict[k] /= self.PT.originalCorpusSize  
+        ordered_PT_dict = OrderedDict()
+        ordered_PT_dict = OrderedDict(sorted(PT_dict.items(), key = lambda item: item[1], reverse=True))
+        PT_JSON= json.dumps(ordered_PT_dict)
+        #print(ordered_PT_dict)
+
+        
+        evalFileName = "JSON_output.txt"
+
+        file = open(evalFileName, 'w')
+
+
+        JSONOUTPUTSTRING = "---------EU----------" + "\n" + EU_JSON + "\n" + "---------CA----------" + "\n" + CA_JSON + "\n" + "---------GL----------" + "\n" + GL_JSON + "\n" + "---------ES----------" + "\n" + ES_JSON + "\n" + "---------EN----------" + "\n" + EN_JSON + "\n" + "---------PT----------" + "\n" + PT_JSON + "\n"
+        
+        file.write(JSONOUTPUTSTRING)
+
+        #Finally
+        file.close()
+
+
 
     def generateProbabilityTable(self):
         # split the training file by tabs
@@ -427,6 +506,8 @@ class LangModel:
         # calculate P(language) by dividing occurences by the total number of tweets
         for k in self.languageProbability.keys():
             self.languageProbability[k] /= countOfTweets
+        
+        self.outputNgram()
 
     def splitTrainingFile(self):
         for i in range(len(self.trainingFile)):
@@ -749,9 +830,9 @@ class LangModel:
         #Finally
         file.close()
 
-        print(metricsDict)
-        print("--------------------")
-        print(confusionMatrixDict)
+        #print(metricsDict)
+        #print("--------------------")
+        #print(confusionMatrixDict)
 
 class LangModel_GroupAwesome(LangModel):
     #parameterized constructor
@@ -874,11 +955,11 @@ class LangModel_GroupAwesome(LangModel):
 # Main
 
 #Deliverable 1 tests:
-#test = LangModel_GroupAwesome(1, 3, ('@', '#', 'http'))
+test = LangModel_GroupAwesome(1, 1, ('@', '#', 'http'))
 #test = LangModel(0, 2, 0.01)
 #test = LangModel(1, 2, 0.5) #DONE
 #test = LangModel(1, 3, 1)   #DONE
-test = LangModel(2, 2, 0.5) #LONG
+#test = LangModel(2, 3, 0.5) #LONG
 
 #test = LangModel(0, 1, 0.5)
 #test = LangModel(1, 1, 0.1)
